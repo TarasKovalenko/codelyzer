@@ -55,7 +55,7 @@ describe('angular-whitespace', () => {
         assertSuccess('angular-whitespace', source, ['check-pipe']);
       });
 
-      it('should succeed with in structural directives with proper style', () => {
+      it('should succeed with in structural directives', () => {
         let source = `
         @Component({
           selector: 'foo',
@@ -128,7 +128,7 @@ describe('angular-whitespace', () => {
         @Component({
           selector: 'foo',
           template: \`
-            <div *ngFor="let pony of ponies | slice:0:1    ">{{ pony }}</div>
+            <span *ngFor="let pony of ponies | slice:0:1">{{ pony }}</span>
           \`
         })
         class Bar {
@@ -137,6 +137,60 @@ describe('angular-whitespace', () => {
         `;
         assertSuccess('angular-whitespace', source, ['check-pipe']);
       });
+
+      it('should also work with ngFor', () => {
+        const source = `
+         @Component({
+           selector: 'foo',
+           moduleId: module.id,
+           template: \`
+           <div *ngFor="let pony of ponies | slice:0:4">
+             <h2>{{ pony.name }}</h2>
+           </div>
+          \`
+         })
+         class Bar {
+           ponies = []
+         }
+         `;
+        assertSuccess('angular-whitespace', source, ['check-pipe']);
+      });
+
+      it('should work with external templates with ngFor', () => {
+        const code = `
+        @Component({
+          selector: 'foo',
+          moduleId: module.id,
+          templateUrl: 'ngFor.html',
+        })
+        class Bar {
+          ponies = []
+        }
+        `;
+        const reader = new MetadataReader(new FsFileResolver());
+        const ast = getAst(code, __dirname + '/../../test/fixtures/angularWhitespace/component.ts');
+        assertSuccess('angular-whitespace', ast, ['check-pipe']);
+      });
+
+
+      it('should work with ngIf else', () => {
+        const source = `
+         @Component({
+           selector: 'foo',
+           moduleId: module.id,
+           template: \`
+           <div *ngIf="isOnline | async; else offline">
+             <h2>hello</h2>
+           </div>
+          \`
+         })
+         class Bar {
+           ponies = []
+         }
+         `;
+        assertSuccess('angular-whitespace', source, ['check-pipe']);
+      });
+
 
       it('should succeed with i18n and description', () => {
         let source = `
@@ -150,29 +204,63 @@ describe('angular-whitespace', () => {
         `;
         assertSuccess('angular-whitespace', source, ['check-pipe']);
       });
+
+      it('should succeed with expression surrounded by parentheses', () => {
+        let source = `
+        @Component({
+          selector: 'foo',
+          template: \`
+            <p *ngIf="(items | async)" class="mat-caption"></p>
+          \`
+        })
+        class Bar {}
+        `;
+        assertSuccess('angular-whitespace', source, ['check-pipe']);
+      });
+
+      it('should succeed with expression surrounded by lot of parentheses', () => {
+        let source = `
+        @Component({
+          selector: 'foo',
+          template: \`
+            <p *ngIf="(((items) | async) | uppercase)" class="mat-caption"></p>
+          \`
+        })
+        class Bar {}
+        `;
+        assertSuccess('angular-whitespace', source, ['check-pipe']);
+      });
+
+      it('should succeed with *ngIf and else condition', () => {
+        let source = `
+        @Component({
+          selector: 'foo',
+          template: \`
+            <div *ngIf="countingPoints$ | async as countingPoints; else countingPoinsAreLoading">
+              {{countingPoints}}
+            </div>
+            <ng-template #countingPoinsAreLoading>loading</ng-template>
+          \`
+        })
+        class Bar {}
+        `;
+        assertSuccess('angular-whitespace', source, ['check-pipe']);
+      });
     });
+
 
     describe('check-semicolon', () => {
 
       it('should work with proper style', () => {
         let source = `
       @Component({
-        template: \` <div *ngIf="codelyzer; is awesome;"></div> \`
+        template: \` <div *ngIf="codelyzer|async; else awesome;"></div> \`
       })
       class Bar {}
       `;
         assertSuccess('angular-whitespace', source, ['check-semicolon']);
       });
 
-      it('should work with proper style also', () => {
-        let source = `
-      @Component({
-        template: \` <div *ngIf="codelyzer; is; awesome;"></div> \`
-      })
-      class Bar {}
-      `;
-        assertSuccess('angular-whitespace', source, ['check-semicolon']);
-      });
 
       it('should work with proper style also', () => {
         let source = `
@@ -394,8 +482,8 @@ describe('failure', () => {
     it('should fail when no space after semicolon', () => {
       let source = `
       @Component({
-        template: \` <div *ngIf="codelyzer; is;awesome;"></div>
-                                              ~~
+        template: \` <div *ngIf="codelyzer;awesome"></div>
+                                          ~~
         \`
       })
       class Bar {}
@@ -407,6 +495,24 @@ describe('failure', () => {
         options: ['check-semicolon']
       });
     });
+
+    it('should fail when no space after semicolon', () => {
+      let source = `
+      @Component({
+        template: \` <md-icon *ngIf="isOnline | async;else offline">cloud_off</md-icon>
+                                                     ~~
+        \`
+      })
+      class Bar {}
+      `;
+      assertAnnotated({
+        ruleName: 'angular-whitespace',
+        message: 'Missing whitespace after semicolon; expecting \'; expr\'',
+        source,
+        options: ['check-semicolon']
+      });
+    });
+
 
     it('should fail when no space after semicolon', () => {
       let source = `
@@ -447,8 +553,8 @@ describe('failure', () => {
       it('should fail when no space after semicolon', () => {
         let source = `
       @Component({
-        template: \` <div *ngIf="codelyzer; is;awesome;"></div>
-                                              ~~
+        template: \` <div *ngIf="codelyzer;awesome"></div>
+                                          ~~
         \`
       })
       class Bar {}
@@ -463,8 +569,8 @@ describe('failure', () => {
         const res = Replacement.applyAll(source, failures[0].getFix());
         expect(res).to.eq(`
       @Component({
-        template: \` <div *ngIf="codelyzer; is; awesome;"></div>
-                                              ~~
+        template: \` <div *ngIf="codelyzer; awesome"></div>
+                                          ~~
         \`
       })
       class Bar {}
@@ -715,5 +821,45 @@ describe('pipes', () => {
       }
       `);
   });
+
+  it('should fail when no space on one side', () => {
+    let source = `
+      @Component({
+        selector: 'foo',
+        template: \`
+           <div *ngFor="let pony of ponies |slice:0:4">
+                                          ~~~
+             <h2>{{ pony.name }}</h2>
+           </div>
+        \`
+      })
+      class Bar {
+        foo: any;
+      }
+      `;
+    const failures = assertAnnotated({
+      ruleName: 'angular-whitespace',
+      message: 'The pipe operator should be surrounded by one space on each side, i.e. " | ".',
+      source,
+      options: ['check-pipe']
+    });
+
+    const res = Replacement.applyAll(source, failures[0].getFix());
+    expect(res).to.eq(`
+      @Component({
+        selector: 'foo',
+        template: \`
+           <div *ngFor="let pony of ponies | slice:0:4">
+                                          ~~~
+             <h2>{{ pony.name }}</h2>
+           </div>
+        \`
+      })
+      class Bar {
+        foo: any;
+      }
+      `);
+  });
+
 });
 
