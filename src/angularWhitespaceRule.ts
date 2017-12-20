@@ -7,23 +7,80 @@ import { ExpTypes } from './angular/expressionTypes';
 import { Config } from './angular/config';
 import { RecursiveAngularExpressionVisitor } from './angular/templates/recursiveAngularExpressionVisitor';
 
+// Check if ES6 'y' flag is usable.
+const stickyFlagUsable = (() => {
+  try {
+    const reg = new RegExp('\d', 'y');
+    return true;
+  } catch (e) {
+    return false;
+  }
+})();
+
 const InterpolationOpen = Config.interpolation[0];
 const InterpolationClose = Config.interpolation[1];
-const InterpolationNoWhitespaceRe = new RegExp(`${InterpolationOpen}\\S(.*?)\\S${InterpolationClose}|${InterpolationOpen}` +
-  `\\s(.*?)\\S${InterpolationClose}|${InterpolationOpen}\\S(.*?)\\s${InterpolationClose}`, 'g');
-const InterpolationExtraWhitespaceRe =
-  new RegExp(`${InterpolationOpen}\\s\\s(.*?)\\s${InterpolationClose}|${InterpolationOpen}\\s(.*?)\\s\\s${InterpolationClose}`, 'g');
-const SemicolonNoWhitespaceNotInSimpleQuoteRe = new RegExp(/;\S(?![^']*')/);
-const SemicolonNoWhitespaceNotInDoubleQuoteRe = new RegExp(/;\S(?![^"]*")/);
+const InterpolationWhitespaceRe = new RegExp(`${InterpolationOpen}(\\s*)(.*?)(\\s*)${InterpolationClose}`, 'g');
+const SemicolonNoWhitespaceNotInSimpleQuoteRe = stickyFlagUsable ?
+  new RegExp(`(?:[^';]|'[^']*'|;(?=\\s))+;(?=\\S)`, 'gy') : /(?:[^';]|'[^']*')+;/g;
+const SemicolonNoWhitespaceNotInDoubleQuoteRe = stickyFlagUsable ?
+  new RegExp(`(?:[^";]|"[^"]*"|;(?=\\s))+;(?=\\S)`, 'gy') : /(?:[^";]|"[^"]*")+;/g;
 
 
-const getSemicolonReplacements = (text: ast.BoundDirectivePropertyAst, absolutePosition: number) => {
+const getSemicolonReplacements = (absolutePosition: number) => {
 
   return [
     new Lint.Replacement(absolutePosition, 1, '; ')
   ];
 
 };
+
+interface CheckSemicolonNoWhitespaceMethod {
+  (reg: RegExp, context: BasicTemplateAstVisitor, expr: string, fixedOffset: number): void;
+}
+
+// Simplify the code when the 'y' flag of RegExp is usable.
+const checkSemicolonNoWhitespaceWithSticky: CheckSemicolonNoWhitespaceMethod = (reg, context, expr, fixedOffset) => {
+  const error = 'Missing whitespace after semicolon; expecting \'; expr\'';
+  let exprMatch: RegExpExecArray | null;
+
+  while (exprMatch = reg.exec(expr)) {
+    const start = fixedOffset + reg.lastIndex;
+    const absolutePosition = context.getSourcePosition(start - 1);
+    context.addFailure(context.createFailure(start, 2,
+      error, getSemicolonReplacements(absolutePosition))
+    );
+  }
+};
+
+const checkSemicolonNoWhitespaceWithoutSticky: CheckSemicolonNoWhitespaceMethod = (reg, context, expr, fixedOffset) => {
+  const error = 'Missing whitespace after semicolon; expecting \'; expr\'';
+  let lastIndex = 0;
+  let exprMatch: RegExpExecArray | null;
+
+  while (exprMatch = reg.exec(expr)) {
+    // When the 'y' flag of RegExp is unusable, must compare lastIndex with match.index,
+    // otherwise the match results may be incorrect.
+    if (lastIndex !== exprMatch.index) {
+      break;
+    }
+
+    const nextIndex = reg.lastIndex;
+    // Check if the character after the semicolon is not a whitespace.
+    if (nextIndex < expr.length && /\S/.test(expr[nextIndex])) {
+      const start = fixedOffset + nextIndex;
+      const absolutePosition = context.getSourcePosition(start - 1);
+      context.addFailure(context.createFailure(start, 2,
+        error, getSemicolonReplacements(absolutePosition))
+      );
+    }
+
+    lastIndex = nextIndex;
+  }
+};
+
+const checkSemicolonNoWhitespace: CheckSemicolonNoWhitespaceMethod = stickyFlagUsable ?
+  checkSemicolonNoWhitespaceWithSticky :
+  checkSemicolonNoWhitespaceWithoutSticky;
 
 type Option = 'check-interpolation' | 'check-pipe' | 'check-semicolon';
 
@@ -39,33 +96,31 @@ class InterpolationWhitespaceVisitor extends BasicTemplateAstVisitor implements 
       // Note that will not be reliable for different interpolation symbols
       let error = null;
       const expr: any = (<any>text.value).source;
-      const applyRegex = (regex: RegExp, failure: string) => {
-        let match: RegExpExecArray | null;
-        while (match = regex.exec(expr)) {
-          const start = text.sourceSpan.start.offset + match.index;
-          const absolutePosition = context.getSourcePosition(start);
-          const length = match[0].length;
-          context.addFailure(
-            context.createFailure(
-            start, length, failure, [
-            new Lint.Replacement(
-              absolutePosition,
-              length,
-              `${InterpolationOpen} ${match[0].replace(InterpolationOpen, '').replace(InterpolationClose, '').trim()} ${InterpolationClose}`
-            )
-          ]));
+      const checkWhiteSpace = (subMatch: string, location: 'start' | 'end', fixTo: string,
+        position: number, absolutePosition: number, lengthFix: number
+      ) => {
+        const { length } = subMatch;
+        if (length === 1) {
+            return;
         }
+        const errorText = length === 0 ? 'Missing' : 'Extra';
+        context.addFailure(context.createFailure(position, length + lengthFix,
+          `${errorText} whitespace in interpolation ${location}; expecting ${InterpolationOpen} expr ${InterpolationClose}`, [
+            new Lint.Replacement(absolutePosition, length + lengthFix, fixTo)
+        ]));
       };
-      InterpolationNoWhitespaceRe.lastIndex = 0;
-      applyRegex(
-        InterpolationNoWhitespaceRe,
-        `Missing whitespace in interpolation; expecting ${InterpolationOpen} expr ${InterpolationClose}`
-      );
-      InterpolationExtraWhitespaceRe.lastIndex = 0;
-      applyRegex(
-        InterpolationExtraWhitespaceRe,
-        `Extra whitespace in interpolation; expecting ${InterpolationOpen} expr ${InterpolationClose}`
-      );
+
+      InterpolationWhitespaceRe.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while (match = InterpolationWhitespaceRe.exec(expr)) {
+        const start = text.sourceSpan.start.offset + match.index;
+        const absolutePosition = context.getSourcePosition(start);
+
+        checkWhiteSpace(match[1], 'start', `${InterpolationOpen} `, start, absolutePosition, InterpolationOpen.length);
+        const positionFix = InterpolationOpen.length + match[1].length + match[2].length;
+        checkWhiteSpace(match[3], 'end', ` ${InterpolationClose}`, start + positionFix, absolutePosition + positionFix,
+          InterpolationClose.length);
+      }
     }
     super.visitBoundText(text, context);
     return null;
@@ -83,31 +138,16 @@ class SemicolonTemplateVisitor extends BasicTemplateAstVisitor implements Config
 
     if (prop.sourceSpan) {
       const directive = (<any>prop.sourceSpan).toString();
-      const rawExpression = directive.split('=')[1].trim();
-      const expr = rawExpression.substring(1, rawExpression.length - 1).trim();
-
-      const doubleQuote = rawExpression.substring(0, 1).indexOf('\"') === 0;
+      const match = /^([^=]+=\s*)([^]*?)\s*$/.exec(directive);
+      const rawExpression = match[2];
+      const positionFix = match[1].length + 1;
+      const expr = rawExpression.slice(1, -1).trim();
+      const doubleQuote = rawExpression[0] === '"';
 
       // Note that will not be reliable for different interpolation symbols
-      let error = null;
-
-      if (doubleQuote && SemicolonNoWhitespaceNotInSimpleQuoteRe.test(expr)) {
-        error = 'Missing whitespace after semicolon; expecting \'; expr\'';
-        const internalStart = expr.search(SemicolonNoWhitespaceNotInSimpleQuoteRe) + 1;
-        const start = prop.sourceSpan.start.offset + internalStart + directive.length - directive.split('=')[1].trim().length + 1;
-        const absolutePosition = context.getSourcePosition(start - 1);
-        return context.addFailure(context.createFailure(start, 2,
-          error, getSemicolonReplacements(prop, absolutePosition))
-        );
-      } else if (!doubleQuote && SemicolonNoWhitespaceNotInDoubleQuoteRe.test(expr)) {
-        error = 'Missing whitespace after semicolon; expecting \'; expr\'';
-        const internalStart = expr.search(SemicolonNoWhitespaceNotInDoubleQuoteRe) + 1;
-        const start = prop.sourceSpan.start.offset + internalStart + directive.length - directive.split('=')[1].trim().length + 1;
-        const absolutePosition = context.getSourcePosition(start - 1);
-        return context.addFailure(context.createFailure(start, 2,
-          error, getSemicolonReplacements(prop, absolutePosition))
-        );
-      }
+      let reg = doubleQuote ? SemicolonNoWhitespaceNotInSimpleQuoteRe : SemicolonNoWhitespaceNotInDoubleQuoteRe;
+      reg.lastIndex = 0;
+      checkSemicolonNoWhitespace(reg, context, expr, prop.sourceSpan.start.offset + positionFix);
     }
   }
 
@@ -258,6 +298,7 @@ export class Rule extends Lint.Rules.AbstractRule {
     },
     optionExamples: ['[true, "check-interpolation"]'],
     typescriptOnly: true,
+    hasFix: true
   };
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
