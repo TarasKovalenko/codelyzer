@@ -60,7 +60,7 @@ class I18NTextVisitor extends BasicTemplateAstVisitor implements ConfigurableVis
     if (!this.visited.has(text)) {
       this.visited.add(text);
       const val = text.value;
-      if (val instanceof ast.ASTWithSource && val.ast instanceof ast.Interpolation) {
+      if (val instanceof ast.ASTWithSource && val.ast instanceof ast.Interpolation && !this.hasI18n) {
         const textNonEmpty = val.ast.strings.some(s => /\w+/.test(s));
         if (textNonEmpty) {
           const span = text.sourceSpan;
@@ -140,8 +140,8 @@ export class Rule extends Lint.Rules.AbstractRule {
   public static metadata: Lint.IRuleMetadata = {
     ruleName: 'i18n',
     type: 'maintainability',
-    description: `Ensures following best practices for i18n.`,
-    rationale: `Makes the code more maintainable in i18n sense.`,
+    description: 'Ensures following best practices for i18n.',
+    rationale: 'Makes the code more maintainable in i18n sense.',
     optionsDescription: Lint.Utils.dedent`
       Arguments may be optionally provided:
       * \`"check-id"\` Makes sure i18n attributes have ID specified

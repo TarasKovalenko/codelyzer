@@ -8,39 +8,34 @@ export class Rule extends Lint.Rules.AbstractRule {
     ruleName: 'no-output-on-prefix',
     type: 'maintainability',
     description: 'Name events without the prefix on',
-    descriptionDetails: `See more at https://angular.io/guide/styleguide#dont-prefix-output-properties`,
+    descriptionDetails: 'See more at https://angular.io/guide/styleguide#dont-prefix-output-properties',
     rationale: `Angular allows for an alternative syntax on-*. If the event itself was prefixed with on
      this would result in an on-onEvent binding expression`,
     options: null,
     optionsDescription: 'Not configurable.',
-    typescriptOnly: true,
+    typescriptOnly: true
   };
 
-  static FAILURE_STRING: string = 'In the class "%s", the output ' +
-    'property "%s" should not be prefixed with on';
+  static FAILURE_STRING: string = 'In the class "%s", the output ' + 'property "%s" should not be prefixed with on';
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-    return this.applyWithWalker(
-      new OutputWalker(sourceFile,
-        this.getOptions()));
+    return this.applyWithWalker(new OutputWalker(sourceFile, this.getOptions()));
   }
 }
 
 class OutputWalker extends NgWalker {
   visitNgOutput(property: ts.PropertyDeclaration, output: ts.Decorator, args: string[]) {
     const className = (<any>property).parent.name.text;
-    const memberName = (<any>property.name).text;
+    const memberName = (<any>property.name).text as string;
 
-    if (memberName && memberName.startsWith('on')) {
+    if (
+      memberName &&
+      memberName.startsWith('on') &&
+      !(memberName.length >= 3 && memberName[2] !== memberName[2].toUpperCase())
+    ) {
       const failureConfig: string[] = [Rule.FAILURE_STRING, className, memberName];
       const errorMessage = sprintf.apply(null, failureConfig);
-      this.addFailure(
-        this.createFailure(
-          property.getStart(),
-          property.getWidth(),
-          errorMessage
-        )
-      );
+      this.addFailure(this.createFailure(property.getStart(), property.getWidth(), errorMessage));
     }
   }
 }

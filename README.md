@@ -20,7 +20,7 @@ You can run the static code analyzer over web apps, NativeScript, Ionic, etc.
 
 [Angular CLI](https://cli.angular.io) has support for codelyzer. In order to validate your code with CLI and the custom Angular specific rules just use:
 
-```
+```shell
 ng new codelyzer
 ng lint
 ```
@@ -46,9 +46,37 @@ Note that by default all components are aligned with the style guide so you won'
 
 ### Custom Setup
 
-You can easily use codelyzer with your custom setup:
+#### Preset
 
-#### Installation
+You can use the [`tslint-angular`](https://github.com/mgechev/tslint-angular) preset. All you need is:
+
+```shell
+npm i tslint-angular
+```
+
+After that create a `tslint.json` file with the following configuration:
+
+```json
+{
+  "extends": ["tslint-angular"]
+}
+```
+
+Run the linter with:
+
+```bash
+./node_modules/.bin/tslint -c tslint.json
+```
+
+TSLint will now complain that there are rules which requlre type checking. In order to fix this, use thw `-p` config option:
+
+```bash
+./node_modules/.bin/tslint -p tsconfig.json -c tslint.json
+```
+
+#### Custom Installation
+
+You can easily use codelyzer with your custom setup:
 
 ```shell
 npm i codelyzer@~4.0.0 tslint@^5.0.0 typescript@2.4.0 @angular/core@~5.0.1 @angular/compiler@~5.0.1 rxjs@5.5.0 zone.js@~0.8.4
@@ -94,7 +122,7 @@ To run TSLint with this setup you can use one of the following alternatives:
 
 2. Run TSLint from a package.json script by adding a script like `tslint .` to your package.json, similar to:
 
-```
+```json
 "scripts": {
   ...
   "lint": "tslint .",
@@ -161,12 +189,12 @@ class Codelyzer {
 As last step you can execute all the rules against your code with tslint:
 
 ```shell
-$ ./node_modules/.bin/tslint -c tslint.json component.ts
+./node_modules/.bin/tslint -c tslint.json component.ts
 ```
 
 You should see the following output:
 
-```
+```text
 component.ts[4, 13]: The selector of the component "Codelyzer" should have prefix "sg" (https://goo.gl/cix8BY)
 component.ts[12, 3]: Implement lifecycle hook interface OnInit for method ngOnInit in class Codelyzer (https://goo.gl/w1Nwk3)
 component.ts[9, 7]: The name of the class Codelyzer should end with the suffix Component (https://goo.gl/5X1TE7)
@@ -219,12 +247,30 @@ Below you can find a recommended configuration which is based on the [Angular St
   "no-forward-ref": true,
   "use-life-cycle-interface": true,
   "use-pipe-transform-interface": true,
+  "no-output-named-after-standard-event": true,
 
   // [ENABLED, "SUFFIX"]
   // Where "SUFFIX" is your custom suffix, for instance "Page" for Ionic 2 components.
   "component-class-suffix": [true, "Component"],
   "directive-class-suffix": [true, "Directive"]
 }
+```
+
+## Disable a rule that validates Template or Styles
+
+Lint rules can be disabled by adding a marker in TypeScript files. More information [here](https://palantir.github.io/tslint/usage/rule-flags/).
+
+To disable rules that validate templates or styles you'd need to add a marker in the TypeScript file referencing them.
+
+```ts
+import { Component } from '@angular/core';
+
+/* tslint:disable:trackBy-function */
+@Component({
+  selector: 'codelyzer',
+  templateUrl: './codelyzer.component.html'
+})
+class Codelyzer { }
 ```
 
 ## Advanced configuration
@@ -281,25 +327,29 @@ module.exports = {
 
 ## Contributors
 
-| [<img alt="mgechev" src="https://avatars1.githubusercontent.com/u/455023?v=4&s=117" width="117">](https://github.com/mgechev) | [<img alt="preslavsh" src="https://avatars2.githubusercontent.com/u/6237138?v=4&s=117" width="117">](https://github.com/preslavsh) | [<img alt="wKoza" src="https://avatars2.githubusercontent.com/u/11403260?v=4&s=117" width="117">](https://github.com/wKoza) | [<img alt="rokerkony" src="https://avatars3.githubusercontent.com/u/156132?v=4&s=117" width="117">](https://github.com/rokerkony) | [<img alt="GregOnNet" src="https://avatars3.githubusercontent.com/u/444278?v=4&s=117" width="117">](https://github.com/GregOnNet) | [<img alt="eppsilon" src="https://avatars1.githubusercontent.com/u/5643?v=4&s=117" width="117">](https://github.com/eppsilon) |
-| :---------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------: |
-|                                             [mgechev](https://github.com/mgechev)                                             |                                             [preslavsh](https://github.com/preslavsh)                                              |                                              [wKoza](https://github.com/wKoza)                                              |                                             [rokerkony](https://github.com/rokerkony)                                             |                                             [GregOnNet](https://github.com/GregOnNet)                                             |                                            [eppsilon](https://github.com/eppsilon)                                            |
+[<img alt="mgechev" src="https://avatars1.githubusercontent.com/u/455023?v=4&s=117" width="117">](https://github.com/mgechev) |[<img alt="preslavsh" src="https://avatars2.githubusercontent.com/u/6237138?v=4&s=117" width="117">](https://github.com/preslavsh) |[<img alt="wKoza" src="https://avatars2.githubusercontent.com/u/11403260?v=4&s=117" width="117">](https://github.com/wKoza) |[<img alt="rokerkony" src="https://avatars3.githubusercontent.com/u/156132?v=4&s=117" width="117">](https://github.com/rokerkony) |[<img alt="GregOnNet" src="https://avatars3.githubusercontent.com/u/444278?v=4&s=117" width="117">](https://github.com/GregOnNet) |[<img alt="eppsilon" src="https://avatars1.githubusercontent.com/u/5643?v=4&s=117" width="117">](https://github.com/eppsilon) |
+:---: |:---: |:---: |:---: |:---: |:---: |
+[mgechev](https://github.com/mgechev) |[preslavsh](https://github.com/preslavsh) |[wKoza](https://github.com/wKoza) |[rokerkony](https://github.com/rokerkony) |[GregOnNet](https://github.com/GregOnNet) |[eppsilon](https://github.com/eppsilon) |
 
-| [<img alt="csvn" src="https://avatars2.githubusercontent.com/u/8770194?v=4&s=117" width="117">](https://github.com/csvn) | [<img alt="ghsyeung" src="https://avatars0.githubusercontent.com/u/1243185?v=4&s=117" width="117">](https://github.com/ghsyeung) | [<img alt="Kobzol" src="https://avatars0.githubusercontent.com/u/4539057?v=4&s=117" width="117">](https://github.com/Kobzol) | [<img alt="lazarljubenovic" src="https://avatars3.githubusercontent.com/u/7661457?v=4&s=117" width="117">](https://github.com/lazarljubenovic) | [<img alt="clydin" src="https://avatars2.githubusercontent.com/u/19598772?v=4&s=117" width="117">](https://github.com/clydin) | [<img alt="connor4312" src="https://avatars0.githubusercontent.com/u/2230985?v=4&s=117" width="117">](https://github.com/connor4312) |
-| :----------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------: |
-|                                             [csvn](https://github.com/csvn)                                              |                                             [ghsyeung](https://github.com/ghsyeung)                                              |                                             [Kobzol](https://github.com/Kobzol)                                              |                                             [lazarljubenovic](https://github.com/lazarljubenovic)                                              |                                              [clydin](https://github.com/clydin)                                              |                                             [connor4312](https://github.com/connor4312)                                              |
+[<img alt="csvn" src="https://avatars2.githubusercontent.com/u/8770194?v=4&s=117" width="117">](https://github.com/csvn) |[<img alt="ghsyeung" src="https://avatars0.githubusercontent.com/u/1243185?v=4&s=117" width="117">](https://github.com/ghsyeung) |[<img alt="Kobzol" src="https://avatars0.githubusercontent.com/u/4539057?v=4&s=117" width="117">](https://github.com/Kobzol) |[<img alt="lazarljubenovic" src="https://avatars3.githubusercontent.com/u/7661457?v=4&s=117" width="117">](https://github.com/lazarljubenovic) |[<img alt="clydin" src="https://avatars2.githubusercontent.com/u/19598772?v=4&s=117" width="117">](https://github.com/clydin) |[<img alt="connor4312" src="https://avatars0.githubusercontent.com/u/2230985?v=4&s=117" width="117">](https://github.com/connor4312) |
+:---: |:---: |:---: |:---: |:---: |:---: |
+[csvn](https://github.com/csvn) |[ghsyeung](https://github.com/ghsyeung) |[Kobzol](https://github.com/Kobzol) |[lazarljubenovic](https://github.com/lazarljubenovic) |[clydin](https://github.com/clydin) |[connor4312](https://github.com/connor4312) |
 
-| [<img alt="Foxandxss" src="https://avatars2.githubusercontent.com/u/1087957?v=4&s=117" width="117">](https://github.com/Foxandxss) | [<img alt="Hotell" src="https://avatars0.githubusercontent.com/u/1223799?v=4&s=117" width="117">](https://github.com/Hotell) | [<img alt="comfroels" src="https://avatars2.githubusercontent.com/u/4616177?v=4&s=117" width="117">](https://github.com/comfroels) | [<img alt="plantain-00" src="https://avatars0.githubusercontent.com/u/7639395?v=4&s=117" width="117">](https://github.com/plantain-00) | [<img alt="nexus-uw" src="https://avatars2.githubusercontent.com/u/3188890?v=4&s=117" width="117">](https://github.com/nexus-uw) | [<img alt="rtfpessoa" src="https://avatars0.githubusercontent.com/u/902384?v=4&s=117" width="117">](https://github.com/rtfpessoa) |
-| :--------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------: |
-|                                             [Foxandxss](https://github.com/Foxandxss)                                              |                                             [Hotell](https://github.com/Hotell)                                              |                                             [comfroels](https://github.com/comfroels)                                              |                                             [plantain-00](https://github.com/plantain-00)                                              |                                             [nexus-uw](https://github.com/nexus-uw)                                              |                                             [rtfpessoa](https://github.com/rtfpessoa)                                             |
+[<img alt="Foxandxss" src="https://avatars2.githubusercontent.com/u/1087957?v=4&s=117" width="117">](https://github.com/Foxandxss) |[<img alt="Hotell" src="https://avatars0.githubusercontent.com/u/1223799?v=4&s=117" width="117">](https://github.com/Hotell) |[<img alt="comfroels" src="https://avatars2.githubusercontent.com/u/4616177?v=4&s=117" width="117">](https://github.com/comfroels) |[<img alt="plantain-00" src="https://avatars0.githubusercontent.com/u/7639395?v=4&s=117" width="117">](https://github.com/plantain-00) |[<img alt="nexus-uw" src="https://avatars2.githubusercontent.com/u/3188890?v=4&s=117" width="117">](https://github.com/nexus-uw) |[<img alt="sagittarius-rev" src="https://avatars0.githubusercontent.com/u/23564517?v=4&s=117" width="117">](https://github.com/sagittarius-rev) |
+:---: |:---: |:---: |:---: |:---: |:---: |
+[Foxandxss](https://github.com/Foxandxss) |[Hotell](https://github.com/Hotell) |[comfroels](https://github.com/comfroels) |[plantain-00](https://github.com/plantain-00) |[nexus-uw](https://github.com/nexus-uw) |[sagittarius-rev](https://github.com/sagittarius-rev) |
 
-| [<img alt="Gillespie59" src="https://avatars2.githubusercontent.com/u/555768?v=4&s=117" width="117">](https://github.com/Gillespie59) | [<img alt="Manduro" src="https://avatars0.githubusercontent.com/u/2545042?v=4&s=117" width="117">](https://github.com/Manduro) | [<img alt="karol-depka" src="https://avatars1.githubusercontent.com/u/958486?v=4&s=117" width="117">](https://github.com/karol-depka) | [<img alt="leosvelperez" src="https://avatars3.githubusercontent.com/u/12051310?v=4&s=117" width="117">](https://github.com/leosvelperez) | [<img alt="Martin-Wegner" src="https://avatars1.githubusercontent.com/u/8995517?v=4&s=117" width="117">](https://github.com/Martin-Wegner) | [<img alt="eromano" src="https://avatars1.githubusercontent.com/u/1030050?v=4&s=117" width="117">](https://github.com/eromano) |
-| :-----------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: |
-|                                             [Gillespie59](https://github.com/Gillespie59)                                             |                                             [Manduro](https://github.com/Manduro)                                              |                                             [karol-depka](https://github.com/karol-depka)                                             |                                              [leosvelperez](https://github.com/leosvelperez)                                              |                                             [Martin-Wegner](https://github.com/Martin-Wegner)                                              |                                             [eromano](https://github.com/eromano)                                              |
+[<img alt="leosvelperez" src="https://avatars3.githubusercontent.com/u/12051310?v=4&s=117" width="117">](https://github.com/leosvelperez) |[<img alt="alan-agius4" src="https://avatars3.githubusercontent.com/u/17563226?v=4&s=117" width="117">](https://github.com/alan-agius4) |[<img alt="Gillespie59" src="https://avatars2.githubusercontent.com/u/555768?v=4&s=117" width="117">](https://github.com/Gillespie59) |[<img alt="eromano" src="https://avatars1.githubusercontent.com/u/1030050?v=4&s=117" width="117">](https://github.com/eromano) |[<img alt="gbilodeau" src="https://avatars2.githubusercontent.com/u/532543?v=4&s=117" width="117">](https://github.com/gbilodeau) |[<img alt="Manduro" src="https://avatars0.githubusercontent.com/u/2545042?v=4&s=117" width="117">](https://github.com/Manduro) |
+:---: |:---: |:---: |:---: |:---: |:---: |
+[leosvelperez](https://github.com/leosvelperez) |[alan-agius4](https://github.com/alan-agius4) |[Gillespie59](https://github.com/Gillespie59) |[eromano](https://github.com/eromano) |[gbilodeau](https://github.com/gbilodeau) |[Manduro](https://github.com/Manduro) |
 
-| [<img alt="scttcper" src="https://avatars3.githubusercontent.com/u/1400464?v=4&s=117" width="117">](https://github.com/scttcper) | [<img alt="lacolaco" src="https://avatars3.githubusercontent.com/u/1529180?v=4&s=117" width="117">](https://github.com/lacolaco) | [<img alt="tmair" src="https://avatars2.githubusercontent.com/u/1596276?v=4&s=117" width="117">](https://github.com/tmair) | [<img alt="cexbrayat" src="https://avatars3.githubusercontent.com/u/411874?v=4&s=117" width="117">](https://github.com/cexbrayat) | [<img alt="reduckted" src="https://avatars0.githubusercontent.com/u/10321525?v=4&s=117" width="117">](https://github.com/reduckted) | [<img alt="sagittarius-rev" src="https://avatars0.githubusercontent.com/u/23564517?v=4&s=117" width="117">](https://github.com/sagittarius-rev) |
-| :------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------: |
-|                                             [scttcper](https://github.com/scttcper)                                              |                                             [lacolaco](https://github.com/lacolaco)                                              |                                             [tmair](https://github.com/tmair)                                              |                                             [cexbrayat](https://github.com/cexbrayat)                                             |                                              [reduckted](https://github.com/reduckted)                                              |                                              [sagittarius-rev](https://github.com/sagittarius-rev)                                              |
+[<img alt="karol-depka" src="https://avatars1.githubusercontent.com/u/958486?v=4&s=117" width="117">](https://github.com/karol-depka) |[<img alt="kevinphelps" src="https://avatars1.githubusercontent.com/u/7399499?v=4&s=117" width="117">](https://github.com/kevinphelps) |[<img alt="alisd23" src="https://avatars2.githubusercontent.com/u/5804010?v=4&s=117" width="117">](https://github.com/alisd23) |[<img alt="Martin-Wegner" src="https://avatars1.githubusercontent.com/u/8995517?v=4&s=117" width="117">](https://github.com/Martin-Wegner) |[<img alt="rtfpessoa" src="https://avatars0.githubusercontent.com/u/902384?v=4&s=117" width="117">](https://github.com/rtfpessoa) |[<img alt="scttcper" src="https://avatars3.githubusercontent.com/u/1400464?v=4&s=117" width="117">](https://github.com/scttcper) |
+:---: |:---: |:---: |:---: |:---: |:---: |
+[karol-depka](https://github.com/karol-depka) |[kevinphelps](https://github.com/kevinphelps) |[alisd23](https://github.com/alisd23) |[Martin-Wegner](https://github.com/Martin-Wegner) |[rtfpessoa](https://github.com/rtfpessoa) |[scttcper](https://github.com/scttcper) |
+
+[<img alt="lacolaco" src="https://avatars3.githubusercontent.com/u/1529180?v=4&s=117" width="117">](https://github.com/lacolaco) |[<img alt="tmair" src="https://avatars2.githubusercontent.com/u/1596276?v=4&s=117" width="117">](https://github.com/tmair) |[<img alt="cexbrayat" src="https://avatars3.githubusercontent.com/u/411874?v=4&s=117" width="117">](https://github.com/cexbrayat) |[<img alt="reduckted" src="https://avatars0.githubusercontent.com/u/10321525?v=4&s=117" width="117">](https://github.com/reduckted) |
+:---: |:---: |:---: |:---: |
+[lacolaco](https://github.com/lacolaco) |[tmair](https://github.com/tmair) |[cexbrayat](https://github.com/cexbrayat) |[reduckted](https://github.com/reduckted) |
 
 ## License
 
