@@ -1,27 +1,27 @@
+import * as e from '@angular/compiler/src/expression_parser/ast';
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
 import { NgWalker, NgWalkerConfig } from './angular/ngWalker';
-import { BasicTemplateAstVisitor  } from './angular/templates/basicTemplateAstVisitor';
-import { RecursiveAngularExpressionVisitor  } from './angular/templates/recursiveAngularExpressionVisitor';
-import * as e from '@angular/compiler/src/expression_parser/ast';
+import { BasicTemplateAstVisitor } from './angular/templates/basicTemplateAstVisitor';
+import { RecursiveAngularExpressionVisitor } from './angular/templates/recursiveAngularExpressionVisitor';
 
 export class Rule extends Lint.Rules.AbstractRule {
-  public static metadata: Lint.IRuleMetadata = {
-    ruleName: 'no-template-call-expression',
-    type: 'functionality',
+  static readonly metadata: Lint.IRuleMetadata = {
     description: 'Call expressions are not allowed in templates except in output handlers.',
-    rationale: 'The change detector will call functions used in templates very often. Use an observable instead.',
     options: null,
     optionsDescription: 'Not configurable.',
-    typescriptOnly: true,
+    rationale: 'The change detector will call functions used in templates very often. Use an observable instead.',
+    ruleName: 'no-template-call-expression',
+    type: 'maintainability',
+    typescriptOnly: true
   };
 
-  static FAILURE_STRING = 'Call expressions are not allowed in templates except in output handlers.';
+  static readonly FAILURE_STRING = 'Call expressions are not allowed in templates except in output handlers';
 
-  apply(sourceFile: ts.SourceFile) {
+  apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
     const walkerConfig: NgWalkerConfig = {
-      templateVisitorCtrl: TemplateVisitor,
-      expressionVisitorCtrl: ExpressionVisitor
+      expressionVisitorCtrl: ExpressionVisitor,
+      templateVisitorCtrl: TemplateVisitor
     };
 
     return this.applyWithWalker(new NgWalker(sourceFile, this.getOptions(), walkerConfig));
@@ -29,19 +29,18 @@ export class Rule extends Lint.Rules.AbstractRule {
 }
 
 class TemplateVisitor extends BasicTemplateAstVisitor {
-  // tslint:disable-next-line:no-missing-super no-empty
-  visitEvent() { }
+  visitEvent() {}
 }
 
 class ExpressionVisitor extends RecursiveAngularExpressionVisitor {
   visitFunctionCall(node: e.FunctionCall, context: any) {
-    this.addFailureAt(node.span.start, node.span.end - node.span.start, Rule.FAILURE_STRING);
+    this.addFailureFromStartToEnd(node.span.start, node.span.end, Rule.FAILURE_STRING);
 
     super.visitFunctionCall(node, context);
   }
 
   visitMethodCall(node: e.MethodCall, context: any) {
-    this.addFailureAt(node.span.start, node.span.end - node.span.start, Rule.FAILURE_STRING);
+    this.addFailureFromStartToEnd(node.span.start, node.span.end, Rule.FAILURE_STRING);
 
     super.visitMethodCall(node, context);
   }

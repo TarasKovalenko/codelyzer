@@ -12,9 +12,8 @@ export interface FlatSymbolTable {
 export class RecursiveAngularExpressionVisitor extends SourceMappingVisitor implements e.AstVisitor {
   public preDefinedVariables: FlatSymbolTable = {};
 
-  constructor(sourceFile: ts.SourceFile, options: Lint.IOptions,
-      protected context: ComponentMetadata, protected basePosition: number) {
-    super(sourceFile, options, context.template.template, basePosition);
+  constructor(sourceFile: ts.SourceFile, options: Lint.IOptions, protected context: ComponentMetadata, protected basePosition: number) {
+    super(sourceFile, options, context.template!.template, basePosition);
   }
 
   visit(ast: e.AST, context: any) {
@@ -33,7 +32,9 @@ export class RecursiveAngularExpressionVisitor extends SourceMappingVisitor impl
     return null;
   }
 
-  visitChain(ast: e.Chain, context: any): any { return this.visitAll(ast.expressions, context); }
+  visitChain(ast: e.Chain, context: any): any {
+    return this.visitAll(ast.expressions, context);
+  }
 
   visitConditional(ast: e.Conditional, context: any): any {
     ast.condition.visit(this, context);
@@ -49,12 +50,14 @@ export class RecursiveAngularExpressionVisitor extends SourceMappingVisitor impl
   }
 
   visitFunctionCall(ast: e.FunctionCall, context: any): any {
-    ast.target.visit(this, context);
+    ast.target!.visit(this, context);
     this.visitAll(ast.args, context);
     return null;
   }
 
-  visitImplicitReceiver(ast: e.ImplicitReceiver, context: any): any { return null; }
+  visitImplicitReceiver(ast: e.ImplicitReceiver, context: any): any {
+    return null;
+  }
 
   visitInterpolation(ast: e.Interpolation, context: any): any {
     ast.expressions.forEach((e: any, i: number) => this.visit(e, context));
@@ -78,9 +81,13 @@ export class RecursiveAngularExpressionVisitor extends SourceMappingVisitor impl
     return this.visitAll(ast.expressions, context);
   }
 
-  visitLiteralMap(ast: e.LiteralMap, context: any): any { return this.visitAll(ast.values, context); }
+  visitLiteralMap(ast: e.LiteralMap, context: any): any {
+    return this.visitAll(ast.values, context);
+  }
 
-  visitLiteralPrimitive(ast: e.LiteralPrimitive, context: any): any { return null; }
+  visitLiteralPrimitive(ast: e.LiteralPrimitive, context: any): any {
+    return null;
+  }
 
   visitMethodCall(ast: e.MethodCall, context: any): any {
     ast.receiver.visit(this, context);
@@ -118,6 +125,7 @@ export class RecursiveAngularExpressionVisitor extends SourceMappingVisitor impl
     return null;
   }
 
-  visitQuote(ast: e.Quote, context: any): any { return null; }
+  visitQuote(ast: e.Quote, context: any): any {
+    return null;
+  }
 }
-

@@ -1,184 +1,179 @@
+import { expect } from 'chai';
 import * as ts from 'typescript';
-import chai = require('chai');
 
+import { Config } from '../../src/angular/config';
 import { DummyFileResolver } from '../../src/angular/fileResolver/dummyFileResolver';
 import { FsFileResolver } from '../../src/angular/fileResolver/fsFileResolver';
-import { MetadataReader } from '../../src/angular/metadataReader';
 import { ComponentMetadata } from '../../src/angular/metadata';
-import { Config } from '../../src/angular/config';
+import { MetadataReader } from '../../src/angular/metadataReader';
 
 import { join, normalize } from 'path';
 
-const getAst = (code: string, file = 'file.ts') => {
-  return ts.createSourceFile(file, code, ts.ScriptTarget.ES2015, true);
-};
+const getAst = (code: string, file = 'file.ts') => ts.createSourceFile(file, code, ts.ScriptTarget.ES5, true);
+
+const last = <T extends ts.Node>(nodes: ts.NodeArray<T>) => nodes[nodes.length - 1];
 
 describe('metadataReader', () => {
-
   describe('directive metadata', () => {
-
     it('should read selector', () => {
       const code = `
-      @Directive({
-        selector: 'foo'
-      })
-      class Bar {}
+        @Directive({
+          selector: 'foo'
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new DummyFileResolver());
       const ast = getAst(code);
-      const metadata = reader.read((<ts.ClassDeclaration>ast.statements.pop()));
-      chai.expect(metadata.selector).eq('foo');
+      const metadata = reader.read(last(ast.statements) as ts.ClassDeclaration)!;
+      expect(metadata.selector).eq('foo');
     });
 
     it('should not fail with empty decorator', () => {
       const code = `
-      @Directive()
-      class Bar {}
+        @Directive()
+        class Bar {}
       `;
       const reader = new MetadataReader(new DummyFileResolver());
       const ast = getAst(code);
-      const metadata = reader.read((<ts.ClassDeclaration>ast.statements.pop()));
-      chai.expect(metadata.selector).eq(undefined);
+      const metadata = reader.read(last(ast.statements) as ts.ClassDeclaration)!;
+      expect(metadata.selector).eq(undefined);
     });
 
     it('should provide class declaration', () => {
       const code = `
-      @Directive()
-      class Bar {}
+        @Directive()
+        class Bar {}
       `;
       const reader = new MetadataReader(new DummyFileResolver());
       const ast = getAst(code);
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata.controller).eq(classDeclaration);
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata.controller).eq(classDeclaration);
     });
   });
 
   describe('component', () => {
-
     it('should work with inline data', () => {
       const code = `
-      @Component({
-        selector: 'foo',
-        template: 'bar',
-        styles: [\`baz\`]
-      })
-      class Bar {}
+        @Component({
+          selector: 'foo',
+          template: 'bar',
+          styles: [\`baz\`]
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new DummyFileResolver());
       const ast = getAst(code);
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata instanceof ComponentMetadata).eq(true);
+      expect(metadata.selector).eq('foo');
       const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code).eq('bar');
-      chai.expect(m.template.url).eq(null);
-      chai.expect(m.styles[0].style.code).eq('baz');
-      chai.expect(m.styles[0].url).eq(null);
+      expect(m.template!.template.code).eq('bar');
+      expect(m.template!.url).eq(undefined);
+      expect(m.styles![0]!.style.code).eq('baz');
+      expect(m.styles![0]!.url).eq(undefined);
     });
 
     it('should work with external template', () => {
       const code = `
-      @Component({
-        selector: 'foo',
-        templateUrl: 'bar',
-        styles: [\`baz\`]
-      })
-      class Bar {}
+        @Component({
+          selector: 'foo',
+          templateUrl: 'bar',
+          styles: [\`baz\`]
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new DummyFileResolver());
       const ast = getAst(code);
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata instanceof ComponentMetadata).eq(true);
+      expect(metadata.selector).eq('foo');
       const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code).eq('');
-      chai.expect(m.template.url).eq('bar');
-      chai.expect(m.styles[0].style.code).eq('baz');
-      chai.expect(m.styles[0].url).eq(null);
+      expect(m.template!.template.code).eq('');
+      expect(m.template!.url).eq('bar');
+      expect(m.styles![0]!.style.code).eq('baz');
+      expect(m.styles![0]!.url).eq(undefined);
     });
 
     it('should work with ignore templateUrl when has template', () => {
       const code = `
-      @Component({
-        selector: 'foo',
-        templateUrl: 'bar',
-        template: 'qux',
-        styles: [\`baz\`]
-      })
-      class Bar {}
+        @Component({
+          selector: 'foo',
+          templateUrl: 'bar',
+          template: 'qux',
+          styles: [\`baz\`]
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new DummyFileResolver());
       const ast = getAst(code);
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata instanceof ComponentMetadata).eq(true);
+      expect(metadata.selector).eq('foo');
       const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code).eq('qux');
-      chai.expect(m.template.url).eq(null);
-      chai.expect(m.styles[0].style.code).eq('baz');
-      chai.expect(m.styles[0].url).eq(null);
+      expect(m.template!.template.code).eq('qux');
+      expect(m.template!.url).eq(undefined);
+      expect(m.styles![0]!.style.code).eq('baz');
+      expect(m.styles![0]!.url).eq(undefined);
     });
-
 
     it('should work with relative paths', () => {
       const code = `
-      @Component({
-        selector: 'foo',
-        templateUrl: 'foo.html',
-        styles: [\`baz\`]
-      })
-      class Bar {}
+        @Component({
+          selector: 'foo',
+          templateUrl: 'foo.html',
+          styles: [\`baz\`]
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new FsFileResolver());
       const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata instanceof ComponentMetadata).eq(true);
+      expect(metadata.selector).eq('foo');
       const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code.trim()).eq('<div></div>');
-      chai.expect(m.template.url.endsWith('foo.html')).eq(true);
-      chai.expect(m.styles[0].style.code).eq('baz');
-      chai.expect(m.styles[0].url).eq(null);
+      expect(m.template!.template.code.trim()).eq('<div></div>');
+      expect(m.template!.url!.endsWith('foo.html')).eq(true);
+      expect(m.styles![0]!.style.code).eq('baz');
+      expect(m.styles![0]!.url).eq(undefined);
     });
 
     it('should work with absolute paths', () => {
       const code = `
-      @Component({
-        selector: 'foo',
-        templateUrl: '/foo.html',
-        styles: [\`baz\`]
-      })
-      class Bar {}
+        @Component({
+          selector: 'foo',
+          templateUrl: '/foo.html',
+          styles: [\`baz\`]
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new FsFileResolver());
       const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata instanceof ComponentMetadata).eq(true);
+      expect(metadata.selector).eq('foo');
       const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code.trim()).eq('<div></div>');
-      chai.expect(m.template.url.endsWith('foo.html')).eq(true);
-      chai.expect(m.styles[0].style.code).eq('baz');
-      chai.expect(m.styles[0].url).eq(null);
+      expect(m.template!.template.code.trim()).eq('<div></div>');
+      expect(m.template!.url!.endsWith('foo.html')).eq(true);
+      expect(m.styles![0]!.style.code).eq('baz');
+      expect(m.styles![0]!.url).eq(undefined);
     });
 
     it('should work invoke Config.resolveUrl after all resolves', () => {
       let invoked = false;
       const bak = Config.resolveUrl;
       try {
-
-          Config.resolveUrl = (url: string) => {
-              invoked = true;
-              chai.expect(url.startsWith(normalize(join(__dirname, '../..')))).eq(true);
-              return url;
-          };
-          const code = `
+        Config.resolveUrl = url => {
+          invoked = true;
+          expect(url!.startsWith(normalize(join(__dirname, '../..')))).eq(true);
+          return url;
+        };
+        const code = `
       @Component({
         selector: 'foo',
         moduleId: module.id,
@@ -187,21 +182,21 @@ describe('metadataReader', () => {
       })
       class Bar {}
       `;
-          const reader = new MetadataReader(new FsFileResolver());
-          const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
-          const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-          chai.expect(invoked).eq(false);
-          const metadata = reader.read(classDeclaration);
-          chai.expect(metadata instanceof ComponentMetadata).eq(true);
-          chai.expect(metadata.selector).eq('foo');
-          const m = <ComponentMetadata>metadata;
-          chai.expect(m.template.template.code.trim()).eq('<div></div>');
-          chai.expect(m.template.url.endsWith('foo.html')).eq(true);
-          chai.expect(m.styles[0].style.code).eq('baz');
-          chai.expect(m.styles[0].url).eq(null);
-          chai.expect(invoked).eq(true);
+        const reader = new MetadataReader(new FsFileResolver());
+        const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
+        const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+        expect(invoked).eq(false);
+        const metadata = reader.read(classDeclaration)!;
+        expect(metadata instanceof ComponentMetadata).eq(true);
+        expect(metadata.selector).eq('foo');
+        const m = <ComponentMetadata>metadata;
+        expect(m.template!.template.code.trim()).eq('<div></div>');
+        expect(m.template!.url!.endsWith('foo.html')).eq(true);
+        expect(m.styles![0]!.style.code).eq('baz');
+        expect(m.styles![0]!.url).eq(undefined);
+        expect(invoked).eq(true);
       } finally {
-          Config.resolveUrl = bak;
+        Config.resolveUrl = bak;
       }
     });
 
@@ -209,13 +204,12 @@ describe('metadataReader', () => {
       let invoked = false;
       const bak = Config.transformTemplate;
       try {
-
-      Config.transformTemplate = (code: string) => {
-        invoked = true;
-        chai.expect(code.trim()).eq('<div></div>');
-        return { code };
-      };
-      const code = `
+        Config.transformTemplate = code => {
+          invoked = true;
+          expect(code.trim()).eq('<div></div>');
+          return { code };
+        };
+        const code = `
       @Component({
         selector: 'foo',
         moduleId: module.id,
@@ -224,22 +218,21 @@ describe('metadataReader', () => {
       })
       class Bar {}
       `;
-      const reader = new MetadataReader(new FsFileResolver());
-      const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      chai.expect(invoked).eq(false);
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
-      const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code.trim()).eq('<div></div>');
-      chai.expect(m.template.url.endsWith('foo.html')).eq(true);
-      chai.expect(m.styles[0].style.code).eq('baz');
-      chai.expect(m.styles[0].url).eq(null);
-      chai.expect(invoked).eq(true);
-
+        const reader = new MetadataReader(new FsFileResolver());
+        const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
+        const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+        expect(invoked).eq(false);
+        const metadata = reader.read(classDeclaration)!;
+        expect(metadata instanceof ComponentMetadata).eq(true);
+        expect(metadata.selector).eq('foo');
+        const m = <ComponentMetadata>metadata;
+        expect(m.template!.template.code.trim()).eq('<div></div>');
+        expect(m.template!.url!.endsWith('foo.html')).eq(true);
+        expect(m.styles![0]!.style.code).eq('baz');
+        expect(m.styles![0]!.url).eq(undefined);
+        expect(invoked).eq(true);
       } finally {
-          Config.transformTemplate = bak;
+        Config.transformTemplate = bak;
       }
     });
 
@@ -247,12 +240,12 @@ describe('metadataReader', () => {
       let invoked = false;
       const bak = Config.transformStyle;
       try {
-          Config.transformStyle = (code: string) => {
-              invoked = true;
-              chai.expect(code).eq('baz');
-              return {code};
-          };
-          const code = `
+        Config.transformStyle = code => {
+          invoked = true;
+          expect(code).eq('baz');
+          return { code };
+        };
+        const code = `
       @Component({
         selector: 'foo',
         moduleId: module.id,
@@ -261,69 +254,109 @@ describe('metadataReader', () => {
       })
       class Bar {}
       `;
-          const reader = new MetadataReader(new FsFileResolver());
-          const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
-          const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-          chai.expect(invoked).eq(false);
-          const metadata = reader.read(classDeclaration);
-          chai.expect(metadata instanceof ComponentMetadata).eq(true);
-          chai.expect(metadata.selector).eq('foo');
-          const m = <ComponentMetadata>metadata;
-          chai.expect(m.template.template.code.trim()).eq('<div></div>');
-          chai.expect(m.template.url.endsWith('foo.html')).eq(true);
-          chai.expect(m.styles[0].style.code).eq('baz');
-          chai.expect(m.styles[0].url).eq(null);
-          chai.expect(invoked).eq(true);
+        const reader = new MetadataReader(new FsFileResolver());
+        const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
+        const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+        expect(invoked).eq(false);
+        const metadata = reader.read(classDeclaration)!;
+        expect(metadata instanceof ComponentMetadata).eq(true);
+        expect(metadata.selector).eq('foo');
+        const m = <ComponentMetadata>metadata;
+        expect(m.template!.template.code.trim()).eq('<div></div>');
+        expect(m.template!.url!.endsWith('foo.html')).eq(true);
+        expect(m.styles![0]!.style.code).eq('baz');
+        expect(m.styles![0]!.url).eq(undefined);
+        expect(invoked).eq(true);
       } finally {
-          Config.transformStyle = bak;
+        Config.transformStyle = bak;
+      }
+    });
+
+    it('should pass url to Config.transformStyle when using styleUrls', () => {
+      let styleUrl = 'test.scss';
+      let invoked = false;
+      const bak = Config.transformStyle;
+
+      try {
+        Config.transformStyle = (code, url) => {
+          invoked = true;
+          expect(url).to.be.an('string');
+          expect(url!.endsWith('.scss')).eq(true);
+          return { code };
+        };
+
+        const code = `
+          @Component({
+            selector: 'foo',
+            moduleId: module.id,
+            templateUrl: 'foo.html',
+            styleUrls: ['${styleUrl}']
+          })
+          class Bar {}
+        `;
+
+        const reader = new MetadataReader(new FsFileResolver());
+        const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/moduleid/foo.ts');
+        const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+        expect(invoked).eq(false);
+        const metadata = reader.read(classDeclaration)!;
+        expect(metadata instanceof ComponentMetadata).eq(true);
+        expect(metadata.selector).eq('foo');
+        const m = <ComponentMetadata>metadata;
+        expect(m.template!.template.code.trim()).eq('<div></div>');
+        expect(m.template!.url!.endsWith('foo.html')).eq(true);
+        expect(m.styles![0]!.style.code).eq('');
+        expect(m.styles![0]!.url).to.be.an('string');
+        expect(invoked).eq(true);
+      } finally {
+        Config.transformStyle = bak;
       }
     });
 
     it('should work work with templates with "`"', () => {
       const code = `
-      @Component({
-        selector: 'foo',
-        moduleId: module.id,
-        templateUrl: 'foo.html',
-        styles: [\`baz\`]
-      })
-      class Bar {}
+        @Component({
+          selector: 'foo',
+          moduleId: module.id,
+          templateUrl: 'foo.html',
+          styles: [\`baz\`]
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new FsFileResolver());
       const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/specialsymbols/foo.ts');
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata instanceof ComponentMetadata).eq(true);
+      expect(metadata.selector).eq('foo');
       const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code.trim()).eq('<div>`</div>');
-      chai.expect(m.template.url.endsWith('foo.html')).eq(true);
-      chai.expect(m.styles[0].style.code).eq('baz');
-      chai.expect(m.styles[0].url).eq(null);
+      expect(m.template!.template.code.trim()).eq('<div>`</div>');
+      expect(m.template!.url!.endsWith('foo.html')).eq(true);
+      expect(m.styles![0]!.style.code).eq('baz');
+      expect(m.styles![0]!.url).eq(undefined);
     });
 
     it('should work work with templates with "`"', () => {
       const code = `
-      @Component({
-        selector: 'foo',
-        moduleId: module.id,
-        templateUrl: 'foo.dust',
-        styleUrls: ['foo.sty']
-      })
-      class Bar {}
+        @Component({
+          selector: 'foo',
+          moduleId: module.id,
+          templateUrl: 'foo.dust',
+          styleUrls: ['foo.sty']
+        })
+        class Bar {}
       `;
       const reader = new MetadataReader(new FsFileResolver());
       const ast = getAst(code, __dirname + '/../../test/fixtures/metadataReader/notsupported/foo.ts');
-      const classDeclaration = <ts.ClassDeclaration>ast.statements.pop();
-      const metadata = reader.read(classDeclaration);
-      chai.expect(metadata instanceof ComponentMetadata).eq(true);
-      chai.expect(metadata.selector).eq('foo');
+      const classDeclaration = <ts.ClassDeclaration>last(ast.statements);
+      const metadata = reader.read(classDeclaration)!;
+      expect(metadata instanceof ComponentMetadata).eq(true);
+      expect(metadata.selector).eq('foo');
       const m = <ComponentMetadata>metadata;
-      chai.expect(m.template.template.code.trim()).eq('');
-      chai.expect(m.template.url.endsWith('foo.dust')).eq(true);
-      chai.expect(m.styles[0].style.code).eq('');
-      chai.expect(m.styles[0].url.endsWith('foo.sty')).eq(true);
+      expect(m.template!.template.code.trim()).eq('');
+      expect(m.template!.url!.endsWith('foo.dust')).eq(true);
+      expect(m.styles![0]!.style.code).eq('');
+      expect(m.styles![0]!.url!.endsWith('foo.sty')).eq(true);
     });
   });
 });
-

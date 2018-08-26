@@ -1,50 +1,39 @@
-import { getComponentDecorator, getDecoratorPropertyInitializer } from './util/utils';
-import * as Lint from 'tslint';
-import * as ts from 'typescript';
-
+import { IRuleMetadata, RuleFailure, Rules } from 'tslint/lib';
+import { isPropertyAccessExpression, SourceFile } from 'typescript/lib/typescript';
+import { ComponentMetadata } from './angular/metadata';
 import { NgWalker } from './angular/ngWalker';
+import { getDecoratorPropertyInitializer } from './util/utils';
 
-export class Rule extends Lint.Rules.AbstractRule {
-
-  static metadata: Lint.IRuleMetadata = {
+export class Rule extends Rules.AbstractRule {
+  static readonly metadata: IRuleMetadata = {
+    description: 'Disallows using of ViewEncapsulation.None.',
+    options: null,
+    optionsDescription: 'Not configurable.',
     ruleName: 'use-view-encapsulation',
     type: 'maintainability',
-    description: 'Disallows using of ViewEncapsulation.None',
-    rationale: '',
-    options: null,
-    optionsDescription: 'Not configurable',
     typescriptOnly: true
   };
 
-  static FAILURE = 'Using "ViewEncapsulation.None" will make your styles global which may have unintended effect';
+  static readonly FAILURE_STRING = 'Using "ViewEncapsulation.None" will make your styles global which may have unintended effect';
 
-  apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-    const walker = new ViewEncapsulationWalker(sourceFile, this.getOptions());
-    return this.applyWithWalker(walker);
+  apply(sourceFile: SourceFile): RuleFailure[] {
+    return this.applyWithWalker(new ViewEncapsulationWalker(sourceFile, this.getOptions()));
   }
 }
 
 class ViewEncapsulationWalker extends NgWalker {
+  protected visitNgComponent(metadata: ComponentMetadata) {
+    this.validateComponent(metadata);
+    super.visitNgComponent(metadata);
+  }
 
-  visitClassDeclaration(node: ts.ClassDeclaration) {
-    const decorator = getComponentDecorator(node);
+  private validateComponent(metadata: ComponentMetadata): void {
+    const encapsulation = getDecoratorPropertyInitializer(metadata.decorator, 'encapsulation');
 
-    if (!decorator) {
+    if (!encapsulation || (isPropertyAccessExpression(encapsulation) && encapsulation.name.text !== 'None')) {
       return;
     }
-    const encapsulation = getDecoratorPropertyInitializer(decorator, 'encapsulation');
 
-    if (!encapsulation ||
-      encapsulation.name.text !== 'None') {
-      return;
-    }
-
-    this.addFailure(
-      this.createFailure(
-        encapsulation.getStart(),
-        encapsulation.getWidth(),
-        Rule.FAILURE
-      )
-    );
+    this.addFailureAtNode(encapsulation, Rule.FAILURE_STRING);
   }
 }

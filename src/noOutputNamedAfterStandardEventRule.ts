@@ -1,29 +1,26 @@
+import { sprintf } from 'sprintf-js';
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
-import { sprintf } from 'sprintf-js';
 import { NgWalker } from './angular/ngWalker';
+import { getClassName } from './util/utils';
 
 export class Rule extends Lint.Rules.AbstractRule {
-  public static metadata: Lint.IRuleMetadata = {
-    ruleName: 'no-output-named-after-standard-event',
-    type: 'maintainability',
+  static readonly metadata: Lint.IRuleMetadata = {
     description: 'Disallows naming directive outputs after a standard DOM event.',
-    rationale: 'Listeners subscribed to an output with such a name will also be invoked when the native event is raised.',
     options: null,
     optionsDescription: 'Not configurable.',
-    typescriptOnly: true,
+    rationale: 'Listeners subscribed to an output with such a name will also be invoked when the native event is raised.',
+    ruleName: 'no-output-named-after-standard-event',
+    type: 'maintainability',
+    typescriptOnly: true
   };
 
-  static FAILURE_STRING: string = 'In the class "%s", the output ' +
-    'property "%s" should not be named after a standard event.';
+  static readonly FAILURE_STRING = 'In the class "%s", the output property "%s" should not be named or renamed after a standard event';
 
-  public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-    return this.applyWithWalker(
-      new OutputMetadataWalker(sourceFile,
-        this.getOptions()));
+  apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+    return this.applyWithWalker(new OutputMetadataWalker(sourceFile, this.getOptions()));
   }
 }
-
 
 export class OutputMetadataWalker extends NgWalker {
   // source: https://developer.mozilla.org/en-US/docs/Web/Events
@@ -201,20 +198,22 @@ export class OutputMetadataWalker extends NgWalker {
     ['wheel', true]
   ]);
 
-  visitNgOutput(property: ts.PropertyDeclaration, output: ts.Decorator, args: string[]) {
-    let className = (<any>property).parent.name.text;
-    let memberName = (<any>property.name).text;
+  protected visitNgOutput(property: ts.PropertyDeclaration, output: ts.Decorator, args: string[]) {
+    this.validateOutput(property, args);
+    super.visitNgOutput(property, output, args);
+  }
 
-    if (memberName && this.standardEventNames.get(memberName)) {
-      const failureConfig: string[] = [Rule.FAILURE_STRING, className, memberName];
-      const errorMessage = sprintf.apply(null, failureConfig);
-      this.addFailure(
-        this.createFailure(
-          property.getStart(),
-          property.getWidth(),
-          errorMessage
-        )
-      );
+  private validateOutput(property: ts.PropertyDeclaration, args: string[]): void {
+    const className = getClassName(property);
+    const memberName = property.name.getText();
+    const outputName = args[0] || memberName;
+
+    if (!outputName || !this.standardEventNames.get(outputName)) {
+      return;
     }
+
+    const failure = sprintf(Rule.FAILURE_STRING, className, memberName);
+
+    this.addFailureAtNode(property, failure);
   }
 }

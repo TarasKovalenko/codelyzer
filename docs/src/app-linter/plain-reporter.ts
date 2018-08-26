@@ -1,5 +1,5 @@
-import {Formatter} from './formatter-interface';
-import {Reporter} from './reporter-interface';
+import { Formatter } from './formatter-interface';
+import { Reporter } from './reporter-interface';
 
 export class PlainReporter implements Reporter {
   constructor(private formatter: Formatter, private header: HTMLElement, private content: HTMLElement) {}
@@ -21,11 +21,10 @@ export class PlainReporter implements Reporter {
   }
 
   highlight(id: any) {
-    document.getElementById(id).classList.add('error-highlight');
+    document.getElementById(id)!.classList.add('error-highlight');
   }
 
   dropHighlight(id: any) {
-    document.getElementById(id).classList.remove('error-highlight');
+    document.getElementById(id)!.classList.remove('error-highlight');
   }
 }
-

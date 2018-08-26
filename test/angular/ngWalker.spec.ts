@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import * as tslint from 'tslint';
+import * as Lint from 'tslint';
 
 import { NgWalker } from '../../src/angular/ngWalker';
 import { RecursiveAngularExpressionVisitor } from '../../src/angular/templates/recursiveAngularExpressionVisitor';
@@ -10,7 +10,8 @@ import * as spies from 'chai-spies';
 
 chai.use(spies);
 
-const chaiSpy = (<any>chai).spy;
+const chaiSpy = (chai as any).spy;
+
 describe('ngWalker', () => {
   it('should visit components, directives, pipes, injectables, and modules', () => {
     let source = `
@@ -32,13 +33,13 @@ describe('ngWalker', () => {
       @Injectable()
       class FooService {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
     let cmpSpy = chaiSpy.on(walker, 'visitNgComponent');
     let dirSpy = chaiSpy.on(walker, 'visitNgDirective');
@@ -46,11 +47,11 @@ describe('ngWalker', () => {
     let modSpy = chaiSpy.on(walker, 'visitNgModule');
     let injSpy = chaiSpy.on(walker, 'visitNgInjectable');
     walker.walk(sf);
-    (<any>chai.expect(cmpSpy).to.have.been).called();
-    (<any>chai.expect(dirSpy).to.have.been).called();
-    (<any>chai.expect(pipeSpy).to.have.been).called();
-    (<any>chai.expect(modSpy).to.have.been).called();
-    (<any>chai.expect(injSpy).to.have.been).called();
+    (chai.expect(cmpSpy).to.have.been as any).called();
+    (chai.expect(dirSpy).to.have.been as any).called();
+    (chai.expect(pipeSpy).to.have.been as any).called();
+    (chai.expect(modSpy).to.have.been as any).called();
+    (chai.expect(injSpy).to.have.been as any).called();
   });
 
   it('should visit inputs and outputs with args', () => {
@@ -65,19 +66,19 @@ describe('ngWalker', () => {
         foobar;
       }
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
     let outputsSpy = chaiSpy.on(walker, 'visitNgOutput');
     let inputsSpy = chaiSpy.on(walker, 'visitNgInput');
     walker.walk(sf);
-    (<any>chai.expect(outputsSpy).to.have.been).called();
-    (<any>chai.expect(inputsSpy).to.have.been).called();
+    (chai.expect(outputsSpy).to.have.been as any).called();
+    (chai.expect(inputsSpy).to.have.been as any).called();
   });
 
   it('should visit component templates', () => {
@@ -88,19 +89,19 @@ describe('ngWalker', () => {
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs, {
       templateVisitorCtrl: BasicTemplateAstVisitor
     });
     let templateSpy = chaiSpy.on(BasicTemplateAstVisitor.prototype, 'visitElement');
     walker.walk(sf);
-    (<any>chai.expect(templateSpy).to.have.been).called();
+    (chai.expect(templateSpy).to.have.been as any).called();
   });
 
   it('should visit component template expressions', () => {
@@ -111,17 +112,17 @@ describe('ngWalker', () => {
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
     let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
     walker.walk(sf);
-    (<any>chai.expect(templateSpy).to.have.been).called();
+    (chai.expect(templateSpy).to.have.been as any).called();
   });
 
   it('should not thow when a template is not literal', () => {
@@ -133,19 +134,21 @@ describe('ngWalker', () => {
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
-      walker.walk(sf);
-      (<any>chai.expect(templateSpy).to.not.have.been).called();
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
+        walker.walk(sf);
+        (chai.expect(templateSpy).to.not.have.been as any).called();
+      })
+      .not.to.throw();
   });
 
   it('should not thow when a template is dynamically injected', () => {
@@ -157,19 +160,21 @@ describe('ngWalker', () => {
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
-      walker.walk(sf);
-      (<any>chai.expect(templateSpy).to.not.have.been).called();
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
+        walker.walk(sf);
+        (chai.expect(templateSpy).to.not.have.been as any).called();
+      })
+      .not.to.throw();
   });
 
   it('should not thow when a template is template string', () => {
@@ -177,23 +182,25 @@ describe('ngWalker', () => {
       const template = '{{foo}}';
       @Component({
         selector: 'foo',
-        template: \`foo \${test} \`
+        template: \`foo \${test}\`
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
-      walker.walk(sf);
-      (<any>chai.expect(templateSpy).to.not.have.been).called();
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
+        walker.walk(sf);
+        (chai.expect(templateSpy).to.not.have.been as any).called();
+      })
+      .not.to.throw();
   });
 
   it('should ignore templateUrl', () => {
@@ -204,19 +211,21 @@ describe('ngWalker', () => {
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
-      walker.walk(sf);
-      (<any>chai.expect(templateSpy).to.not.have.been).called();
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
+        walker.walk(sf);
+        (chai.expect(templateSpy).to.not.have.been as any).called();
+      })
+      .not.to.throw();
   });
 
   it('should ignore empty @Component decorator', () => {
@@ -224,19 +233,21 @@ describe('ngWalker', () => {
       @Component()
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
-      walker.walk(sf);
-      (<any>chai.expect(templateSpy).to.not.have.been).called();
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        let templateSpy = chaiSpy.on(RecursiveAngularExpressionVisitor.prototype, 'visitPropertyRead');
+        walker.walk(sf);
+        (chai.expect(templateSpy).to.not.have.been as any).called();
+      })
+      .not.to.throw();
   });
 
   it('should ignore non-invoked @Component decorator', () => {
@@ -244,21 +255,22 @@ describe('ngWalker', () => {
       @Component
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      walker.walk(sf);
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        walker.walk(sf);
+      })
+      .not.to.throw();
   });
 
   describe('inline styles', () => {
-
     it('should not throw when there are inline styles', () => {
       let source = `
         @Component({
@@ -268,17 +280,19 @@ describe('ngWalker', () => {
         })
         class Baz {}
       `;
-      let ruleArgs: tslint.IOptions = {
+      let ruleArgs: Lint.IOptions = {
         ruleName: 'foo',
         ruleArguments: ['foo'],
-        disabledIntervals: null,
+        disabledIntervals: [],
         ruleSeverity: 'warning'
       };
-      let sf = ts.createSourceFile('foo', source, null);
+      let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
       let walker = new NgWalker(sf, ruleArgs);
-      (<any>chai).expect(() => {
-        walker.walk(sf);
-      }).not.to.throw();
+      chai
+        .expect(() => {
+          walker.walk(sf);
+        })
+        .not.to.throw();
     });
 
     it('should use the default css walker by default', () => {
@@ -290,19 +304,21 @@ describe('ngWalker', () => {
         })
         class Baz {}
       `;
-      let ruleArgs: tslint.IOptions = {
+      let ruleArgs: Lint.IOptions = {
         ruleName: 'foo',
         ruleArguments: ['foo'],
-        disabledIntervals: null,
+        disabledIntervals: [],
         ruleSeverity: 'warning'
       };
-      let sf = ts.createSourceFile('foo', source, null);
+      let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
       let walker = new NgWalker(sf, ruleArgs);
-      (<any>chai).expect(() => {
-        let templateSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssStyleSheet');
-        walker.walk(sf);
-        (<any>chai.expect(templateSpy).to.have.been).called();
-      }).not.to.throw();
+      chai
+        .expect(() => {
+          let templateSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssStyleSheet');
+          walker.walk(sf);
+          (chai.expect(templateSpy).to.have.been as any).called();
+        })
+        .not.to.throw();
     });
 
     it('should not break', () => {
@@ -334,20 +350,19 @@ describe('ngWalker', () => {
           }
         }
       `;
-      let ruleArgs: tslint.IOptions = {
+      let ruleArgs: Lint.IOptions = {
         ruleName: 'foo',
         ruleArguments: ['foo'],
-        disabledIntervals: null,
+        disabledIntervals: [],
         ruleSeverity: 'warning'
       };
-      let sf = ts.createSourceFile('foo', source, null);
+      let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
       let walker = new NgWalker(sf, ruleArgs);
-      (<any>chai).expect(() => {
-        walker.walk(sf);
-      }).not.to.throw();
+      chai
+        .expect(() => {
+          walker.walk(sf);
+        })
+        .not.to.throw();
     });
-
   });
-
 });
-

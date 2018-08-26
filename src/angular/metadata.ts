@@ -1,38 +1,46 @@
-import * as ts from 'typescript';
 import { RawSourceMap } from 'source-map';
+import * as ts from 'typescript';
 
 export interface CodeWithSourceMap {
   code: string;
-  source?: string;
   map?: RawSourceMap;
+  source?: string;
 }
 
-export interface TemplateMetadata {
-  template: CodeWithSourceMap;
-  node: ts.Node;
-  url: string;
+export interface PropertyMetadata {
+  node?: ts.Node;
+  url?: string;
 }
 
-export interface StyleMetadata {
+export interface AnimationMetadata extends PropertyMetadata {
+  animation: CodeWithSourceMap;
+}
+
+export interface StyleMetadata extends PropertyMetadata {
   style: CodeWithSourceMap;
-  node: ts.Node;
-  url: string;
 }
 
-export interface StylesMetadata {
-  [index: number]: StyleMetadata;
-  length: number;
-  push(e: StyleMetadata): number;
+export interface TemplateMetadata extends PropertyMetadata {
+  template: CodeWithSourceMap;
 }
 
 export class DirectiveMetadata {
-  selector: string;
-  controller: ts.ClassDeclaration;
-  decorator: ts.Decorator;
+  constructor(
+    public readonly controller: ts.ClassDeclaration,
+    public readonly decorator: ts.Decorator,
+    public readonly selector?: string
+  ) {}
 }
 
 export class ComponentMetadata extends DirectiveMetadata {
-  template: TemplateMetadata;
-  styles: StylesMetadata;
+  constructor(
+    public readonly controller: ts.ClassDeclaration,
+    public readonly decorator: ts.Decorator,
+    public readonly selector?: string,
+    public readonly animations?: (AnimationMetadata | undefined)[],
+    public readonly styles?: (StyleMetadata | undefined)[],
+    public readonly template?: TemplateMetadata
+  ) {
+    super(controller, decorator, selector);
+  }
 }
-

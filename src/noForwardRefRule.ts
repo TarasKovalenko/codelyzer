@@ -1,54 +1,46 @@
-import * as Lint from 'tslint';
-import * as ts from 'typescript';
 import { sprintf } from 'sprintf-js';
-import SyntaxKind = require('./util/syntaxKind');
+import { IRuleMetadata, RuleFailure, Rules, RuleWalker } from 'tslint/lib';
+import { CallExpression, SourceFile, SyntaxKind } from 'typescript/lib/typescript';
 
-export class Rule extends Lint.Rules.AbstractRule {
-  public static metadata: Lint.IRuleMetadata = {
-    ruleName: 'no-forward-ref',
-    type: 'maintainability',
+export class Rule extends Rules.AbstractRule {
+  static metadata: IRuleMetadata = {
     description: 'Disallows usage of forward references for DI.',
-    rationale: 'The flow of DI is disrupted by using `forwardRef` and might make code more difficult to understand.',
     options: null,
     optionsDescription: 'Not configurable.',
-    typescriptOnly: true,
+    rationale: 'The flow of DI is disrupted by using `forwardRef` and might make code more difficult to understand.',
+    ruleName: 'no-forward-ref',
+    type: 'maintainability',
+    typescriptOnly: true
   };
 
+  static readonly FAILURE_STRING_CLASS = 'Avoid using forwardRef in class "%s"';
+  static readonly FAILURE_STRING_VARIABLE = 'Avoid using forwardRef in variable "%s"';
 
-  static FAILURE_IN_CLASS: string = 'Avoid using forwardRef in class "%s"';
-
-  static FAILURE_IN_VARIABLE: string = 'Avoid using forwardRef in variable "%s"';
-
-  public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-    return this.applyWithWalker(
-      new ExpressionCallMetadataWalker(sourceFile,
-        this.getOptions()));
+  apply(sourceFile: SourceFile): RuleFailure[] {
+    return this.applyWithWalker(new ExpressionCallMetadataWalker(sourceFile, this.getOptions()));
   }
 }
 
-export class ExpressionCallMetadataWalker extends Lint.RuleWalker {
-  visitCallExpression(node: ts.CallExpression) {
+export class ExpressionCallMetadataWalker extends RuleWalker {
+  visitCallExpression(node: CallExpression) {
     this.validateCallExpression(node);
     super.visitCallExpression(node);
   }
 
   private validateCallExpression(callExpression) {
     if (callExpression.expression.text === 'forwardRef') {
-      let currentNode: any = callExpression;
+      let currentNode = callExpression;
+
       while (currentNode.parent.parent) {
         currentNode = currentNode.parent;
       }
-      let failureConfig: string[] = [];
-      if (currentNode.kind === SyntaxKind.current().VariableStatement) {
-        failureConfig = [Rule.FAILURE_IN_VARIABLE, currentNode.declarationList.declarations[0].name.text];
-      } else {
-        failureConfig = [Rule.FAILURE_IN_CLASS, currentNode.name.text];
-      }
-      this.addFailure(
-        this.createFailure(
-          callExpression.getStart(),
-          callExpression.getWidth(),
-          sprintf.apply(this, failureConfig)));
+
+      const failure =
+        currentNode.kind === SyntaxKind.VariableStatement
+          ? sprintf(Rule.FAILURE_STRING_VARIABLE, currentNode.declarationList.declarations[0].name.text)
+          : sprintf(Rule.FAILURE_STRING_CLASS, currentNode.name.text);
+
+      this.addFailureAtNode(callExpression, failure);
     }
   }
 }

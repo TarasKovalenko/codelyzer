@@ -7,9 +7,9 @@ export function convertRuleOptions(ruleConfiguration: Map<string, Partial<IOptio
   ruleConfiguration.forEach(({ ruleArguments, ruleSeverity }, ruleName) => {
     const options: IOptions = {
       disabledIntervals: [], // deprecated, so just provide an empty array.
-      ruleArguments: ruleArguments !== null ? ruleArguments : [],
+      ruleArguments: ruleArguments || [],
       ruleName,
-      ruleSeverity: ruleSeverity !== null ? ruleSeverity : 'error',
+      ruleSeverity: ruleSeverity || 'error'
     };
     output.push(options);
   });
@@ -23,13 +23,13 @@ export function camelize(stringWithHyphens: string): string {
 }
 
 function transformName(name: string): string {
-    // camelize strips out leading and trailing underscores and dashes, so make sure they aren't passed to camelize
-    // the regex matches the groups (leading underscores and dashes)(other characters)(trailing underscores and dashes)
-    const nameMatch = name.match(/^([-_]*)(.*?)([-_]*)$/);
-    if (nameMatch === null) {
-        return `${name}Rule`;
-    }
-    return `${nameMatch[1]}${camelize(nameMatch[2])}${nameMatch[3]}Rule`;
+  // camelize strips out leading and trailing underscores and dashes, so make sure they aren't passed to camelize
+  // the regex matches the groups (leading underscores and dashes)(other characters)(trailing underscores and dashes)
+  const nameMatch = name.match(/^([-_]*)(.*?)([-_]*)$/);
+  if (nameMatch === null) {
+    return `${name}Rule`;
+  }
+  return `${nameMatch[1]}${camelize(nameMatch[2])}${nameMatch[3]}Rule`;
 }
 
 /**
@@ -48,21 +48,23 @@ function loadRule(directory: string, ruleName: string): any | 'not-found' {
 }
 
 export function getRelativePath(directory?: string | null, relativeTo?: string) {
-  if (directory !== null) {
+  if (directory !== null && directory !== undefined) {
     const basePath = relativeTo !== undefined ? relativeTo : process.cwd();
+
     return path.resolve(basePath, directory);
   }
+
   return undefined;
 }
 
 export function arrayify<T>(arg?: T | T[]): T[] {
   if (Array.isArray(arg)) {
     return arg;
-  } else if (arg !== null) {
+  } else if (arg !== null && arg !== undefined) {
     return [arg];
-  } else {
-    return [];
   }
+
+  return [];
 }
 
 function loadCachedRule(directory: string, ruleName: string, isCustomPath?: boolean): any | undefined {
@@ -95,17 +97,17 @@ export function find<T, U>(inputs: T[], getResult: (t: T) => U | undefined): U |
       return result;
     }
   }
+
   return undefined;
 }
 
 function findRule(name: string, rulesDirectories?: string | string[]): any | undefined {
-    const camelizedName = transformName(name);
-    return find(arrayify(rulesDirectories), (dir) => loadCachedRule(dir, camelizedName, true));
+  const camelizedName = transformName(name);
+
+  return find(arrayify(rulesDirectories), dir => loadCachedRule(dir, camelizedName, true));
 }
 
-export function loadRules(ruleOptionsList: IOptions[],
-                   rulesDirectories?: string | string[],
-                   isJs = false): IRule[] {
+export function loadRules(ruleOptionsList: IOptions[], rulesDirectories?: string | string[], isJs = false): IRule[] {
   const rules: IRule[] = [];
   const notFoundRules: string[] = [];
   const notAllowedInJsRules: string[] = [];
@@ -124,10 +126,12 @@ export function loadRules(ruleOptionsList: IOptions[],
       notAllowedInJsRules.push(ruleName);
     } else {
       const rule = new Rule(ruleOptions);
+
       if (rule.isEnabled()) {
         rules.push(rule);
       }
     }
   }
+
   return rules;
 }

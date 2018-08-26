@@ -4,48 +4,47 @@ import * as ast from '@angular/compiler';
 import { BasicTemplateAstVisitor } from './angular/templates/basicTemplateAstVisitor';
 import { NgWalker } from './angular/ngWalker';
 
-
 const InvalidSyntaxBoxOpen = '([';
 const InvalidSyntaxBoxClose = '])';
 const ValidSyntaxOpen = '[(';
 const ValidSyntaxClose = ')]';
-const InvalidSyntaxBoxRe = new RegExp('\\[(.*?)\\]');
+const InvalidSyntaxBoxRe = /\[(.*?)\]/;
 
 const getReplacements = (text: ast.BoundEventAst, absolutePosition: number) => {
-  const expr: string = (text.sourceSpan as any).toString();
+  const expr = text.sourceSpan.toString();
   const internalStart = expr.indexOf(InvalidSyntaxBoxOpen);
   const internalEnd = expr.lastIndexOf(InvalidSyntaxBoxClose);
   const len = internalEnd - internalStart - InvalidSyntaxBoxClose.length;
   const trimmed = expr.substr(internalStart + InvalidSyntaxBoxOpen.length, len).trim();
 
   return [
-    new Lint.Replacement(absolutePosition,
+    new Lint.Replacement(
+      absolutePosition,
       internalEnd - internalStart + ValidSyntaxClose.length,
-      `${ValidSyntaxOpen}${trimmed}${ValidSyntaxClose}`)
+      `${ValidSyntaxOpen}${trimmed}${ValidSyntaxClose}`
+    )
   ];
 };
 
 class BananaInBoxTemplateVisitor extends BasicTemplateAstVisitor {
-
-  visitEvent(prop: ast.BoundEventAst, context: any): any {
-
+  visitEvent(prop: ast.BoundEventAst, context: BasicTemplateAstVisitor): any {
     if (prop.name) {
-      let error = null;
+      let error: string | null = null;
+
       if (InvalidSyntaxBoxRe.test(prop.name)) {
         error = 'Invalid binding syntax. Use [(expr)] instead';
       }
 
       if (error) {
-        const expr: any = (<any>prop.sourceSpan).toString();
+        const expr = prop.sourceSpan.toString();
         const internalStart = expr.indexOf(InvalidSyntaxBoxOpen) + 1;
         const start = prop.sourceSpan.start.offset + internalStart;
         const absolutePosition = this.getSourcePosition(start - 1);
 
-        this.addFailure(this.createFailure(start, expr.trim().length,
-          error, getReplacements(prop, absolutePosition))
-          );
+        this.addFailureAt(start, expr.trim().length, error, getReplacements(prop, absolutePosition));
       }
     }
+    super.visitEvent(prop, context);
   }
 }
 
@@ -62,11 +61,10 @@ export class Rule extends Lint.Rules.AbstractRule {
   };
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-
     return this.applyWithWalker(
-      new NgWalker(sourceFile,
-        this.getOptions(), {
-          templateVisitorCtrl: BananaInBoxTemplateVisitor,
-        }));
+      new NgWalker(sourceFile, this.getOptions(), {
+        templateVisitorCtrl: BananaInBoxTemplateVisitor
+      })
+    );
   }
 }

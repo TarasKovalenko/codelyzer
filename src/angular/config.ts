@@ -1,66 +1,48 @@
-import * as ts from 'typescript';
 import { CodeWithSourceMap } from './metadata';
 
-export interface UrlResolver {
-  (url: string, d: ts.Decorator): string;
+export interface StyleTransformer {
+  (style: string, url?: string): CodeWithSourceMap;
 }
 
 export interface TemplateTransformer {
-  (template: string, url: string, d: ts.Decorator): CodeWithSourceMap;
+  (template: string, url?: string): CodeWithSourceMap;
 }
 
-export interface StyleTransformer {
-  (style: string, url: string, d: ts.Decorator): CodeWithSourceMap;
+export interface UrlResolver {
+  (url: string | null): string | null;
 }
 
-export const LogLevel = {
-  None: 0,
-  Error: 0b001,
-  Info: 0b011,
-  Debug: 0b111
-};
+export const LogLevel = { Debug: 0b111, Error: 0b001, Info: 0b011, None: 0 };
 
 export interface Config {
   interpolation: [string, string];
-  resolveUrl: UrlResolver;
-  transformTemplate: TemplateTransformer;
-  transformStyle: StyleTransformer;
-  predefinedDirectives: DirectiveDeclaration[];
   logLevel: number;
+  predefinedDirectives: DirectiveDeclaration[];
+  resolveUrl: UrlResolver;
+  transformStyle: StyleTransformer;
+  transformTemplate: TemplateTransformer;
 }
 
 export interface DirectiveDeclaration {
-  selector: string;
   exportAs?: string;
-  inputs?: string[];
-  outputs?: string[];
-  hostProperties?: string[];
   hostAttributes?: string[];
   hostListeners?: string[];
+  hostProperties?: string[];
+  inputs?: string[];
+  outputs?: string[];
+  selector: string;
 }
 
 let BUILD_TYPE = '<%= BUILD_TYPE %>';
 
+const transform = (code: string, extension: '.css' | '.html', url?: string): { code: string; url?: string } => {
+  return { code: !url || url.endsWith(extension) ? code : '', url };
+};
+
 export const Config: Config = {
   interpolation: ['{{', '}}'],
 
-  resolveUrl(url: string, d: ts.Decorator) {
-    return url;
-  },
-
-  transformTemplate(code: string, url: string, d: ts.Decorator) {
-    if (!url || url.endsWith('.html')) {
-      return { code, url };
-    }
-    return { code: '', url };
-  },
-
-  transformStyle(code: string, url: string, d: ts.Decorator) {
-    if (!url || url.endsWith('.css')) {
-      return { code, url };
-    }
-    return { code: '', url };
-  },
+  logLevel: BUILD_TYPE === 'dev' ? LogLevel.Debug : LogLevel.None,
 
   predefinedDirectives: [
     { selector: 'form:not([ngNoForm]):not([formGroup]), ngForm, [ngForm]', exportAs: 'ngForm' },
@@ -69,6 +51,8 @@ export const Config: Config = {
     { selector: '[ngIf]', exportAs: 'ngIf', inputs: ['ngIf'] },
     { selector: '[ngFor][ngForOf]', exportAs: 'ngFor', inputs: ['ngForTemplate', 'ngForOf'] },
     { selector: '[ngSwitch]', exportAs: 'ngSwitch', inputs: ['ngSwitch'] },
+    { selector: '[ngSwitchCase]', exportAs: 'ngSwitchCase', inputs: ['ngSwitchCase'] },
+    { selector: '[ngSwitchDefault]', exportAs: 'ngSwitchDefault', inputs: ['ngSwitchDefault'] },
 
     // @angular/material
     { selector: 'mat-autocomplete', exportAs: 'matAutocomplete' },
@@ -87,11 +71,17 @@ export const Config: Config = {
     { selector: 'md-select', exportAs: 'mdSelect' }
   ],
 
-  logLevel: BUILD_TYPE === 'dev' ? LogLevel.Debug : LogLevel.None
+  resolveUrl(url: string | null) {
+    return url;
+  },
+
+  transformStyle: (code: string, url?: string) => transform(code, '.css', url),
+
+  transformTemplate: (code: string, url?: string) => transform(code, '.html', url)
 };
 
 try {
   const root = require('app-root-path');
   const newConfig = require(root.path + '/.codelyzer');
   Object.assign(Config, newConfig);
-} catch (e) {}
+} catch {}

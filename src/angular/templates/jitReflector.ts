@@ -13,7 +13,6 @@ import {
   NgModuleFactory,
   NgModuleRef,
   QueryList,
-  Renderer,
   SecurityContext,
   TRANSLATIONS_FORMAT,
   TemplateRef,
@@ -52,8 +51,8 @@ export const MODULE_SUFFIX = '';
 const builtinExternalReferences = createBuiltinExternalReferencesMap();
 
 export class JitReflector implements CompileReflector {
+  tryAnnotations: any;
   private reflectionCapabilities: ReflectionCapabilities;
-  private builtinExternalReferences = new Map<ExternalReference, any>();
 
   constructor() {
     this.reflectionCapabilities = new ReflectionCapabilities();
@@ -85,6 +84,10 @@ export class JitReflector implements CompileReflector {
 
   annotations(typeOrFunc: /*Type*/ any): any[] {
     return this.reflectionCapabilities.annotations(typeOrFunc);
+  }
+
+  shallowAnnotations(typeOrFunc: /*Type*/ any): any[] {
+    throw new Error('Not supported in JIT mode');
   }
 
   propMetadata(typeOrFunc: /*Type*/ any): { [key: string]: any[] } {
@@ -128,7 +131,6 @@ function createBuiltinExternalReferencesMap() {
   map.set(Identifiers.interpolate, ɵinterpolate);
   map.set(Identifiers.EMPTY_ARRAY, ɵEMPTY_ARRAY);
   map.set(Identifiers.EMPTY_MAP, ɵEMPTY_MAP);
-  map.set(Identifiers.Renderer, Renderer);
   map.set(Identifiers.viewDef, ɵvid);
   map.set(Identifiers.elementDef, ɵeld);
   map.set(Identifiers.anchorDef, ɵand);

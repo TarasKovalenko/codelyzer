@@ -1,37 +1,180 @@
-import { assertSuccess, assertAnnotated } from './testHelper';
+import { getFailureMessage, Rule } from '../src/noInputRenameRule';
+import { assertAnnotated, assertSuccess } from './testHelper';
 
-describe('no-input-rename', () => {
-  describe('invalid directive input property', () => {
-    it('should fail, when a directive input property is renamed', () => {
-      let source = `
-      class ButtonComponent {
-        @Input('labelAttribute') label: string;
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      }`;
-      assertAnnotated({
-        ruleName: 'no-input-rename',
-        message: 'In the class "ButtonComponent", the directive input property "label" should not be renamed.' +
-        'Please, consider the following use "@Input() label: string"',
-        source
+const {
+  metadata: { ruleName }
+} = Rule;
+
+describe(ruleName, () => {
+  describe('failure', () => {
+    describe('Component', () => {
+      it('should fail when an input property is renamed', () => {
+        const source = `
+          @Component({
+            selector: 'foo'
+          })
+          class TestComponent {
+            @Input('bar') label: string;
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          }
+        `;
+        assertAnnotated({
+          message: getFailureMessage('TestComponent', 'label'),
+          ruleName,
+          source
+        });
+      });
+
+      it('should fail when an input property is fake renamed', () => {
+        const source = `
+          @Component({
+            selector: 'foo'
+          })
+          class TestComponent {
+            @Input('foo') label: string;
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          }
+        `;
+        assertAnnotated({
+          message: getFailureMessage('TestComponent', 'label'),
+          ruleName,
+          source
+        });
+      });
+    });
+
+    describe('Directive', () => {
+      it('should fail when an input property is renamed', () => {
+        const source = `
+          @Directive({
+            selector: '[foo]'
+          })
+          class TestDirective {
+            @Input('labelText') label: string;
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          }
+        `;
+        assertAnnotated({
+          message: getFailureMessage('TestDirective', 'label'),
+          ruleName,
+          source
+        });
+      });
+
+      it('should fail when an input property is renamed and its name is strictly equal to the property', () => {
+        const source = `
+          @Directive({
+            selector: '[label]'
+          })
+          class TestDirective {
+            @Input('label') label: string;
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          }
+        `;
+        assertAnnotated({
+          message: getFailureMessage('TestDirective', 'label'),
+          ruleName,
+          source
+        });
+      });
+
+      it('should fail when an input property has the same name that the alias', () => {
+        const source = `
+          @Directive({
+            selector: '[foo]'
+          })
+          class TestDirective {
+            @Input('label') label: string;
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          }
+        `;
+        assertAnnotated({
+          message: getFailureMessage('TestDirective', 'label'),
+          ruleName,
+          source
+        });
+      });
+
+      it("should fail when an input alias is kebab-cased and whitelisted, but the property doesn't match the alias", () => {
+        const source = `
+          @Directive({
+            selector: 'foo'
+          })
+          class TestDirective {
+            @Input('aria-invalid') ariaBusy: string;
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          }
+        `;
+        assertAnnotated({
+          message: getFailureMessage('TestDirective', 'ariaBusy'),
+          ruleName,
+          source
+        });
       });
     });
   });
 
-  describe('valid directive input property', () => {
-    it('should succeed, when a directive input property is properly used', () => {
-      let source = `
-      class ButtonComponent {
-        @Input() label: string;
-      }`;
-      assertSuccess('no-input-rename', source);
+  describe('success', () => {
+    describe('Component', () => {
+      it('should succeed when an input property is not renamed', () => {
+        const source = `
+          @Component
+          class TestComponent {
+            @Input() label: string;
+          }
+        `;
+        assertSuccess(ruleName, source);
+      });
     });
 
-    it('should succeed, when a directive input property rename is the same as the name of the property', () => {
-      let source = `
-      class ButtonComponent {
-        @Input('label') label: string;
-      }`;
-      assertSuccess('no-input-rename', source);
+    describe('Directive', () => {
+      it('should succeed when the first directive selector is strictly equal to the alias', () => {
+        const source = `
+          @Directive({
+            selector: '[foo], label2'
+          })
+          class TestDirective {
+            @Input('foo') bar: string;
+          }
+        `;
+        assertSuccess(ruleName, source);
+      });
+
+      it('should succeed when the second directive selector is strictly equal to the alias', () => {
+        const source = `
+          @Directive({
+            selector: '[foo], myselector'
+          })
+          class TestDirective {
+            @Input('myselector') bar: string;
+          }
+        `;
+        assertSuccess(ruleName, source);
+      });
+
+      it('should succeed when a directive selector is also an input property', () => {
+        const source = `
+          @Directive({
+            selector: '[foo], label2'
+          })
+          class TestDirective {
+            @Input() foo: string;
+          }
+        `;
+        assertSuccess(ruleName, source);
+      });
+
+      it('should succeed when an input alias is kebab-cased and whitelisted', () => {
+        const source = `
+          @Directive({
+            selector: 'foo'
+          })
+          class TestDirective {
+            @Input('aria-label') ariaLabel: string;
+          }
+        `;
+        assertSuccess(ruleName, source);
+      });
     });
   });
 });

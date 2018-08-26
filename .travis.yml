@@ -1,7 +1,7 @@
 language: node_js
 
 node_js:
-  - 5
+  - '8.11.1'
   - stable
 os:
   - linux
@@ -10,7 +10,4 @@ os:
 branches:
   only: master
 
-before_install: npm i rxjs@5.0.1 @angular/core @angular/compiler zone.js@0.7.2
-
-script: npm run tscv && npm run lint && npm t
-
+script: npm run tscv && npm run format:check && npm run lint && npm t

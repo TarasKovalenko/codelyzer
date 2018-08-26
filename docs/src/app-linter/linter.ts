@@ -1,6 +1,4 @@
-import {Formatter} from './formatter-interface';
-import {RichEditor} from './rich-editor-interface';
-import {Reporter} from './reporter-interface';
+import { RichEditor } from './rich-editor-interface';
 
 export interface LinterConfig {
   textEditor: RichEditor;
@@ -9,9 +7,7 @@ export interface LinterConfig {
 }
 
 export class Linter {
-
-  private worker: Worker;
-  private widgets: any[] = [];
+  private worker!: Worker;
   private errorId = 0;
 
   constructor(private config: LinterConfig) {}
@@ -23,7 +19,7 @@ export class Linter {
         if (res.data.output) {
           const output = JSON.parse(res.data.output);
           console.log(res.data.output);
-          output.forEach((e: any) => e.id = `cdlz-${++this.errorId}`);
+          output.forEach((e: any) => (e.id = `cdlz-${++this.errorId}`));
           this.config.textEditor.showErrors(output);
           if (this.errorId > 1e10) {
             this.errorId = 0;
@@ -35,8 +31,7 @@ export class Linter {
         this.config.onError(e);
       }
     });
-    this.config.textEditor.on('change', () =>
-      this.lint(this.config.textEditor.getValue()));
+    this.config.textEditor.on('change', () => this.lint(this.config.textEditor.getValue()));
     this.lint(this.config.textEditor.getValue());
   }
 
@@ -44,4 +39,3 @@ export class Linter {
     this.worker.postMessage(JSON.stringify({ program }));
   }
 }
-

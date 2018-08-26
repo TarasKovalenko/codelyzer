@@ -1,3 +1,116 @@
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+<a name="4.4.4"></a>
+
+## [4.4.4](https://github.com/mgechev/codelyzer/compare/4.4.3...4.4.4) (2018-08-13)
+
+### Bug Fixes
+
+- errors not being displayed in the correct files ([#700](https://github.com/mgechev/codelyzer/issues/700)) ([db3cf5a](https://github.com/mgechev/codelyzer/commit/db3cf5a))
+
+<a name="4.4.3"></a>
+
+## [4.4.3](https://github.com/mgechev/codelyzer/compare/4.4.2...4.4.3) (2018-08-06)
+
+### Bug Fixes
+
+- url not passed to transformStyle when using styleUrls ([#686](https://github.com/mgechev/codelyzer/issues/686)) ([5a84041](https://github.com/mgechev/codelyzer/commit/5a84041))
+- **templates-no-negated-async:** not reporting failures for some cases ([#694](https://github.com/mgechev/codelyzer/issues/694)) ([2ffe2ea](https://github.com/mgechev/codelyzer/commit/2ffe2ea))
+
+<a name="4.4.2"></a>
+
+## [4.4.2](https://github.com/mgechev/codelyzer/compare/4.4.1...4.4.2) (2018-06-25)
+
+### Bug Fixes
+
+- **no-output-on-prefix:** fix regular expression ([#674](https://github.com/mgechev/codelyzer/issues/674)) ([adc974a](https://github.com/mgechev/codelyzer/commit/adc974a))
+
+<a name="4.4.1"></a>
+
+# [4.4.1](https://github.com/mgechev/codelyzer/compare/4.4.0...4.4.1) (2018-06-23)
+
+### Bug Fixes
+
+- regressions in 4.4.0 ([#671](https://github.com/mgechev/codelyzer/issues/671)) ([d922dcb](https://github.com/mgechev/codelyzer/commit/d922dcb)), closes [#669](https://github.com/mgechev/codelyzer/issues/669), [#670](https://github.com/mgechev/codelyzer/issues/670)
+
+<a name="4.4.0"></a>
+
+# [4.4.0](https://github.com/mgechev/codelyzer/compare/4.3.0...4.4.0) (2018-06-23)
+
+### Bug Fixes
+
+- **no-input-prefix:** exact strings not being reported ([#597](https://github.com/mgechev/codelyzer/issues/597)) ([1ed8d8c](https://github.com/mgechev/codelyzer/commit/1ed8d8c))
+- **no-input-rename:** aria attributes not being allowed to be renamed ([#665](https://github.com/mgechev/codelyzer/issues/665)) ([2c905ab](https://github.com/mgechev/codelyzer/commit/2c905ab)), closes [#663](https://github.com/mgechev/codelyzer/issues/663)
+- **no-input-rename:** fix bugs ([#585](https://github.com/mgechev/codelyzer/issues/585)) ([75f9de6](https://github.com/mgechev/codelyzer/commit/75f9de6)), closes [#580](https://github.com/mgechev/codelyzer/issues/580)
+- **no-template-call-expression:** not being exported ([#582](https://github.com/mgechev/codelyzer/issues/582)) ([ad57552](https://github.com/mgechev/codelyzer/commit/ad57552)), closes [#577](https://github.com/mgechev/codelyzer/issues/577)
+- **no-life-cycle-call:** fix bugs ([#575](https://github.com/mgechev/codelyzer/issues/575)) ([4415cc2](https://github.com/mgechev/codelyzer/commit/4415cc2)), closes [#573](https://github.com/mgechev/codelyzer/issues/573)
+- **no-input-prefix:** not being able to check for multiple concurrent prefixes ([#590](https://github.com/mgechev/codelyzer/issues/590)) ([43d415a](https://github.com/mgechev/codelyzer/commit/43d415a)), closes [#589](https://github.com/mgechev/codelyzer/issues/589)
+- **no-output-rename:** not being reported for some cases ([#614](https://github.com/mgechev/codelyzer/issues/614)) ([5e34f41](https://github.com/mgechev/codelyzer/commit/5e34f41)), closes [#613](https://github.com/mgechev/codelyzer/issues/613)
+- **template-conditional-complexity:** not reporting failures for '[ngIf]' ([#611](https://github.com/mgechev/codelyzer/issues/611)) ([7fc3b09](https://github.com/mgechev/codelyzer/commit/7fc3b09)), closes [#607](https://github.com/mgechev/codelyzer/issues/607)
+- **template-cyclomatic-complexity:** not reporting failures for '[ngForOf]' and '[ngIf]' ([#612](https://github.com/mgechev/codelyzer/issues/612)) ([fedd331](https://github.com/mgechev/codelyzer/commit/fedd331)), closes [#609](https://github.com/mgechev/codelyzer/issues/609)
+- **trackBy-function:** not reporting failures for '[ngForOf]' ([#610](https://github.com/mgechev/codelyzer/issues/610)) ([af52912](https://github.com/mgechev/codelyzer/commit/af52912)), closes [#608](https://github.com/mgechev/codelyzer/issues/608)
+- some rules not considering options correctly ([#617](https://github.com/mgechev/codelyzer/issues/617)) ([bce0026](https://github.com/mgechev/codelyzer/commit/bce0026))
+
+### Features
+
+- **import-destructuring-spacing:** add fixer ([#595](https://github.com/mgechev/codelyzer/issues/595)) ([2acc27b](https://github.com/mgechev/codelyzer/commit/2acc27b))
+- **max-inline-declarations:** add option to limit animations lines ([#569](https://github.com/mgechev/codelyzer/issues/569)) ([25f3e16](https://github.com/mgechev/codelyzer/commit/25f3e16)), closes [#568](https://github.com/mgechev/codelyzer/issues/568)
+- **rule:** add no-queries-parameter rule ([#571](https://github.com/mgechev/codelyzer/issues/571)) ([e9f4d23](https://github.com/mgechev/codelyzer/commit/e9f4d23))
+- **rule:** add prefer-inline-decorator rule ([#586](https://github.com/mgechev/codelyzer/issues/586)) ([5d5e21d](https://github.com/mgechev/codelyzer/commit/5d5e21d)), closes [#549](https://github.com/mgechev/codelyzer/issues/549)
+- build scripts are not cross-platform [#581](https://github.com/mgechev/codelyzer/issues/581) [204c8ef](https://github.com/mgechev/codelyzer/commit/204c8ef), closes [#454](https://github.com/mgechev/codelyzer/issues/454)
+- upgrade TypeScript dependency to 2.7.2 [#584](https://github.com/mgechev/codelyzer/issues/584) [d4bf62d](https://github.com/mgechev/codelyzer/commit/d4bf62d), closes [#583](https://github.com/mgechev/codelyzer/issues/583)
+- turn on strict TS compilation mode ([#631](https://github.com/mgechev/codelyzer/issues/631)) ([da0f553](https://github.com/mgechev/codelyzer/commit/da0f553)), closes [#629](https://github.com/mgechev/codelyzer/issues/629)
+- externalizing template, css visitor abstractions and NgWalker ([#658](https://github.com/mgechev/codelyzer/issues/658)) ([b79ea58](https://github.com/mgechev/codelyzer/commit/b79ea58))
+
+Credits to the codelyzer's [maintainers and contributors](https://github.com/mgechev/codelyzer#contributors).
+
+# 4.3.0
+
+## New Rules
+
+- `max-inline-declarations` which limits the size of inline templates and/or styles. Credits to [NagRock](https://github.com/NagRock) [#536](https://github.com/mgechev/codelyzer/issues/536) [174ed46](https://github.com/mgechev/codelyzer/commit/174ed46f11dddd2837559163d6475e00cef8be84).
+- `prefer-output-readonly` requires the `@Output`s of a component to be `readonly`. Credits to [rafaelss95](https://github.com/rafaelss95) [#515](https://github.com/mgechev/codelyzer/issues/515) [3d652d1](https://github.com/mgechev/codelyzer/commit/3d652d13b447fabf333c994506990638ac72fcd8).
+- `no-conflicting-life-cycle-hooks` prevents to implement OnChanges and DoCheck on the same class. Credits to [rafaelss95](https://github.com/rafaelss95) [#560](https://github.com/mgechev/codelyzer/issues/560) [e521115](https://github.com/mgechev/codelyzer/commit/e521115bc6fed7521f83e72b6946a05ef87dfea3).
+- `enforce-component-selector` Component Selector Required [#551](https://github.com/mgechev/codelyzer/issues/551) [b9c899b](https://github.com/mgechev/codelyzer/commit/b9c899bef14fa12d2fb8bddbaaa9da86426a80cb). Credits to [wKoza](https://github.com/wKoza).
+- `no-life-cycle-call` disallow explicit calls to lifecycle hooks. Credits to [rafaelss95](https://github.com/rafaelss95) [#427](https://github.com/mgechev/codelyzer/issues/427) [3e10013](https://github.com/mgechev/codelyzer/commit/3e1001385a1b140633f35b2a1234032b8b9c41a2)
+
+## Bug Fixes
+
+- Possible bug with no-input-rename [#374](https://github.com/mgechev/codelyzer/issues/374) [f3a53bd](https://github.com/mgechev/codelyzer/commit/f3a53bd8164483b28816eedf6d80e7dcc7a95cb5).
+- Removed dependency on `@angular/platform-browser-dynamic` [#525](https://github.com/mgechev/codelyzer/issues/525) [671e954](https://github.com/mgechev/codelyzer/commit/671e954de3f5c6db7c1873ea462e25fb963e5e8d).
+- Rule `contextual-life-cycle` too aggressively scoped [#545](https://github.com/mgechev/codelyzer/issues/545) [dcb4b3e](https://github.com/mgechev/codelyzer/commit/dcb4b3e495c38a3cebfa47a23a62a3dcab2e8a03).
+- `no-output-named-after-standard-event` Does Not Check Output Rename [#537](https://github.com/mgechev/codelyzer/issues/537) [96d9292](https://github.com/mgechev/codelyzer/commit/96d9292a77928371819f11df102c5ad7ab198719).
+- Template Conditional Complexity reports incorrect threshold [#533](https://github.com/mgechev/codelyzer/issues/533) [5851306](https://github.com/mgechev/codelyzer/commit/58513061b9b513f2bc99789381daed1bc5316645).
+
+A lot of credits go to [rafaelss95](https://github.com/rafaelss95), [wKoza](https://github.com/wKoza). The rest of the amazing people who work on codelyzer, can be found [here](https://github.com/mgechev/codelyzer#contributors).
+
+# 4.2.1
+
+## Bug Fixes
+
+- Improved `peerDependencies` range.
+
+# 4.2.0
+
+## New Rules
+
+- `template-cyclomatic-complexity` which limits the estimated [Cyclomatic complexity](https://en.wikipedia.org/wiki/Cyclomatic_complexity) in your templates. Credits to [wKoza](https://github.com/wKoza).
+- `template-conditional-complexity` which limits the complexity of boolean expressions inside of your templates. Credits to [wKoza](https://github.com/wKoza).
+
+## Features
+
+- Support for Angular version 6 [#524](https://github.com/mgechev/codelyzer/issues/524) [50fa2d6](https://github.com/mgechev/codelyzer/commit/50fa2d6a2ea64082f2179bf4e3e93777888a9797)
+- Cyclomatic complexity rule `template-cyclomatic-complexity` [#514](https://github.com/mgechev/codelyzer/issues/514) [3221330](https://github.com/mgechev/codelyzer/commit/322133000e47aabf9426ebf5315520c63f3483d8)
+- Limiting template condition complexity (rule `template-conditional-complexity`) [#508](https://github.com/mgechev/codelyzer/issues/508) [bb86295](https://github.com/mgechev/codelyzer/commit/bb862952ca51d5490e81e01b4a125ddab1415404)
+- Complete Rules Status section in README and complete Rules Page [#501](https://github.com/mgechev/codelyzer/issues/501) [1fe9d22](https://github.com/mgechev/codelyzer/commit/1fe9d22a8ef6426899cd1759053d31004658aef8)
+
+## Bug Fixes
+
+- "extends": ["codelyzer"] is broken [#505](https://github.com/mgechev/codelyzer/issues/505) [7b76dfa](https://github.com/mgechev/codelyzer/commit/7b76dfa4543ebf33d640fde2db7d5d4748a144ed)
+- Message for 'use-host-property-decorator' includes invalid link to Angular style docs [#510](https://github.com/mgechev/codelyzer/issues/510) [5fc77c9](https://github.com/angular/angular/commit/5fc77c90cb06970aa8a7a1ea829f81fff9628ff8)
+
 # 4.1.0
 
 ## Features
@@ -49,7 +162,6 @@ Enable the new rule by adding the following line in your `tslint.json` config fi
 
 Thanks to [@eromano](https://github.com/eromano) for the rule implementation!
 
-
 ### Breaking Changes
 
 - The rules `templates-use-public`, `no-access-missing-member`, `invoke-injectable` and `template-to-ng-template` no longer exist. Remove them from your `tslint.json` configuration.
@@ -77,7 +189,6 @@ Thanks to [@eromano](https://github.com/eromano) for the rule implementation!
 - Error on validating a pipe with `@Pipe` decorator where we use a shorthand syntax for passing properties [#399](https://github.com/mgechev/codelyzer/issues/399) [8e3fafb](https://github.com/mgechev/codelyzer/commit/8e3fafb9658aec5dd73c7bf4c401457622ad0c99)
 - Broken `check-pipe` option of `angular-whitespace` [#365](https://github.com/mgechev/codelyzer/issues/365) [bef790b](https://github.com/mgechev/codelyzer/pull/405)
 - Some rules report false positives [#379](https://github.com/mgechev/codelyzer/issues/379) [8719674](https://github.com/mgechev/codelyzer/pull/381) [4721aca](https://github.com/mgechev/codelyzer/pull/401) [bef790b](https://github.com/mgechev/codelyzer/pull/405)
-
 
 Thanks to [@wKoza](https://github.com/wKoza) for working on the introduced features, bug fixes and code reviews!
 
@@ -133,7 +244,6 @@ Thanks to [@wKoza](https://github.com/wKoza) for code reviews and implementation
 - rules name in documentation aren't consistent [#325](https://github.com/mgechev/codelyzer/issues/325) [7a67607](https://github.com/mgechev/codelyzer/pull/326). Big thanks to @wKoza.
 - Our links to angular.io are broken [#333](https://github.com/mgechev/codelyzer/issues/333) [5a532b4](https://github.com/mgechev/codelyzer/pull/334). Big thanks to @wKoza.
 - Report errors twice [#336](https://github.com/mgechev/codelyzer/issues/336) [44a9306](https://github.com/mgechev/codelyzer/pull/339)
-
 
 # 3.0.1
 
@@ -297,12 +407,12 @@ $ tslint --type-check --project src/client/tsconfig.json
 
 - The rules `directive-selector-name`, `component-selector-name`, `directive-selector-type`, `component-selector-type`, `component-selector-prefix`, `directive-selector-prefix` no longer exist. Instead use:
 
-    ```js
-    // The rule have the following arguments:
-    // [ENABLED, "attribute" | "element", "selectorPrefix" | ["listOfPrefixes"], "camelCase" | "kebab-case"]
-    "directive-selector": [true, "attribute", "sg", "camelCase"],
-    "component-selector": [true, "element", "sg", "kebab-case"],
-    ```
+  ```js
+  // The rule have the following arguments:
+  // [ENABLED, "attribute" | "element", "selectorPrefix" | ["listOfPrefixes"], "camelCase" | "kebab-case"]
+  "directive-selector": [true, "attribute", "sg", "camelCase"],
+  "component-selector": [true, "element", "sg", "kebab-case"],
+  ```
 
 ### Features
 
@@ -323,7 +433,6 @@ $ tslint --type-check --project src/client/tsconfig.json
 - Report missing styles in the correct position [#166](https://github.com/mgechev/codelyzer/issues/166) [ e9575fb](https://github.com/mgechev/codelyzer/commit/e9575fbe30f932c29fce6a870ba2d8e194700a87)
 - Proper selector prefix matching [#103](https://github.com/mgechev/codelyzer/issues/103) [7285121](https://github.com/mgechev/codelyzer/commit/72851217d27a355b117ae1909b47e9a78f0de086)
 - Selectors compatible with the spec [#15](https://github.com/mgechev/codelyzer/issues/15) [3373dffe](https://github.com/mgechev/codelyzer/commit/3373dffe7962f5e919161d60bc152f0d82dcb5d2)
-
 
 # 1.0.0-beta.4
 
@@ -381,4 +490,3 @@ $ tslint --type-check --project src/client/tsconfig.json
 ### Refactoring
 
 - Migrate from typings to `@types` [f9cc498](https://github.com/mgechev/codelyzer/commit/f9cc49851312b0d9bbbbaa8fa323238fddfacf78).
-

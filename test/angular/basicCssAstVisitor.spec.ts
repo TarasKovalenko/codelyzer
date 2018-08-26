@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import * as tslint from 'tslint';
+import * as Lint from 'tslint';
 
 import { NgWalker } from '../../src/angular/ngWalker';
 import { BasicCssAstVisitor } from '../../src/angular/styles/basicCssAstVisitor';
@@ -8,32 +8,33 @@ import * as spies from 'chai-spies';
 
 chai.use(spies);
 
-const chaiSpy = (<any>chai).spy;
+const chaiSpy = (chai as any).spy;
 
 describe('basicCssAstVisitor', () => {
-
   it('should use the default css walker by default', () => {
     let source = `
       @Component({
         styles: [
-          \`foo\`
+          'foo'
         ]
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      let templateSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssStyleSheet');
-      walker.walk(sf);
-      (<any>chai.expect(templateSpy).to.have.been).called();
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        let templateSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssStyleSheet');
+        walker.walk(sf);
+        (chai.expect(templateSpy).to.have.been as any).called();
+      })
+      .not.to.throw();
   });
 
   it('should visit the css selector', () => {
@@ -41,29 +42,29 @@ describe('basicCssAstVisitor', () => {
       @Component({
         styles: [
           \`
-          .foo::before {}
-          .baz bar {}
+            .foo::before {}
+            .baz bar {}
           \`
         ]
       })
       class Baz {}
     `;
-    let ruleArgs: tslint.IOptions = {
+    let ruleArgs: Lint.IOptions = {
       ruleName: 'foo',
       ruleArguments: ['foo'],
-      disabledIntervals: null,
+      disabledIntervals: [],
       ruleSeverity: 'warning'
     };
-    let sf = ts.createSourceFile('foo', source, null);
+    let sf = ts.createSourceFile('foo', source, ts.ScriptTarget.ES5);
     let walker = new NgWalker(sf, ruleArgs);
-    (<any>chai).expect(() => {
-      let selectorSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssSelector');
-      let pseudoSelectorSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssPseudoSelector');
-      walker.walk(sf);
-      (<any>chai.expect(selectorSpy).to.have.been).called();
-      (<any>chai.expect(pseudoSelectorSpy).to.have.been).called();
-    }).not.to.throw();
+    chai
+      .expect(() => {
+        let selectorSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssSelector');
+        let pseudoSelectorSpy = chaiSpy.on(BasicCssAstVisitor.prototype, 'visitCssPseudoSelector');
+        walker.walk(sf);
+        (chai.expect(selectorSpy).to.have.been as any).called();
+        (chai.expect(pseudoSelectorSpy).to.have.been as any).called();
+      })
+      .not.to.throw();
   });
-
 });
-

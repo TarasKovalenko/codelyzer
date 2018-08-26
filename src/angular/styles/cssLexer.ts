@@ -52,9 +52,7 @@ export function generateErrorMessage(
   row: number,
   column: number
 ): string {
-  return (
-    `${message} at column ${row}:${column} in expression [` + findProblemCode(input, errorValue, index, column) + ']'
-  );
+  return `${message} at column ${row}:${column} in expression [` + findProblemCode(input, errorValue, index, column) + ']';
 }
 
 export function findProblemCode(input: string, errorValue: string, index: number, column: number): string {
@@ -77,27 +75,21 @@ export function findProblemCode(input: string, errorValue: string, index: number
 
 export class CssToken {
   numValue: number;
-  constructor(
-    public index: number,
-    public column: number,
-    public line: number,
-    public type: CssTokenType,
-    public strValue: string
-  ) {
+  constructor(public index: number, public column: number, public line: number, public type: CssTokenType, public strValue: string) {
     this.numValue = charCode(strValue, 0);
   }
 }
 
 export class CssLexer {
-  scan(text: string, trackComments: boolean = false): CssScanner {
+  scan(text: string, trackComments = false): CssScanner {
     return new CssScanner(text, trackComments);
   }
 }
 
 export function cssScannerError(token: CssToken, message: string): Error {
   const error = Error('CssParseError: ' + message);
-  (error as any)[ERROR_RAW_MESSAGE] = message;
-  (error as any)[ERROR_TOKEN] = token;
+  error[ERROR_RAW_MESSAGE] = message;
+  error[ERROR_TOKEN] = token;
   return error;
 }
 
@@ -105,11 +97,11 @@ const ERROR_TOKEN = 'ngToken';
 const ERROR_RAW_MESSAGE = 'ngRawMessage';
 
 export function getRawMessage(error: Error): string {
-  return (error as any)[ERROR_RAW_MESSAGE];
+  return error[ERROR_RAW_MESSAGE];
 }
 
 export function getToken(error: Error): CssToken {
-  return (error as any)[ERROR_TOKEN];
+  return error[ERROR_TOKEN];
 }
 
 function _trackWhitespace(mode: CssLexerMode) {
@@ -126,19 +118,19 @@ function _trackWhitespace(mode: CssLexerMode) {
 }
 
 export class CssScanner {
-  peek: number;
+  peek!: number;
   peekPeek: number;
-  length: number = 0;
-  index: number = -1;
-  column: number = -1;
-  line: number = 0;
+  length = 0;
+  index = -1;
+  column = -1;
+  line = 0;
 
   /** @internal */
   _currentMode: CssLexerMode = CssLexerMode.BLOCK;
   /** @internal */
   _currentError: Error | null = null;
 
-  constructor(public input: string, private _trackComments: boolean = false) {
+  constructor(public input: string, private _trackComments = false) {
     this.length = this.input.length;
     this.peekPeek = this.peekAt(0);
     this.advance();
@@ -226,7 +218,7 @@ export class CssScanner {
       next = new CssToken(this.index, this.column, this.line, CssTokenType.EOF, 'end of file');
     }
 
-    let isMatchingType: boolean = false;
+    let isMatchingType = false;
     if (type == CssTokenType.IdentifierOrNumber) {
       // TODO (matsko): implement array traversal for lookup here
       isMatchingType = next.type == CssTokenType.Number || next.type == CssTokenType.Identifier;
@@ -449,12 +441,7 @@ export class CssScanner {
   scanCharacter(): CssToken | null {
     const start = this.index;
     const startingColumn = this.column;
-    if (
-      this.assertCondition(
-        isValidCssCharacter(this.peek, this._currentMode),
-        charStr(this.peek) + ' is not a valid CSS character'
-      )
-    ) {
+    if (this.assertCondition(isValidCssCharacter(this.peek, this._currentMode), charStr(this.peek) + ' is not a valid CSS character')) {
       return null;
     }
 
@@ -489,10 +476,8 @@ export class CssScanner {
     return false;
   }
 
-  error(message: string, errorTokenValue: string | null = null, doNotAdvance: boolean = false): CssToken {
-    const index: number = this.index;
-    const column: number = this.column;
-    const line: number = this.line;
+  error(message: string, errorTokenValue: string | null = null, doNotAdvance = false): CssToken {
+    const { column, index, line } = this;
     errorTokenValue = errorTokenValue || String.fromCharCode(this.peek);
     const invalidToken = new CssToken(index, column, line, CssTokenType.Invalid, errorTokenValue);
     const errorMessage = generateErrorMessage(this.input, message, errorTokenValue, index, line, column);
@@ -534,13 +519,7 @@ function isIdentifierStart(code: number, next: number): boolean {
 }
 
 function isIdentifierPart(target: number): boolean {
-  return (
-    chars.isAsciiLetter(target) ||
-    target == chars.$BACKSLASH ||
-    target == chars.$MINUS ||
-    target == chars.$_ ||
-    chars.isDigit(target)
-  );
+  return chars.isAsciiLetter(target) || target == chars.$BACKSLASH || target == chars.$MINUS || target == chars.$_ || chars.isDigit(target);
 }
 
 function isValidPseudoSelectorCharacter(code: number): boolean {

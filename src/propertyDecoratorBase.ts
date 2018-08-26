@@ -1,8 +1,7 @@
+import { sprintf } from 'sprintf-js';
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
-import { sprintf } from 'sprintf-js';
-import { IOptions } from 'tslint';
-import SyntaxKind = require('./util/syntaxKind');
+import { getDecoratorArgument, getDecoratorName } from './util/utils';
 
 export interface IUsePropertyDecoratorConfig {
   propertyName: string;
@@ -11,62 +10,54 @@ export interface IUsePropertyDecoratorConfig {
 }
 
 export class UsePropertyDecorator extends Lint.Rules.AbstractRule {
-  public static formatFailureString(config: IUsePropertyDecoratorConfig, decoratorName: string, className: string) {
-    let decorators = config.decoratorName;
-    if (decorators instanceof Array) {
-      decorators = (<string[]>decorators).map(d => `"@${d}"`).join(', ');
+  public static formatFailureString(config: IUsePropertyDecoratorConfig, decoratorStr: string, className: string) {
+    const { decoratorName, errorMessage, propertyName } = config;
+    let decorators: string | string[];
+
+    if (decoratorName instanceof Array) {
+      decorators = decoratorName.map(d => `"@${d}"`).join(', ');
     } else {
-      decorators = `"@${decorators}"`;
+      decorators = `"@${decoratorName}"`;
     }
-    return sprintf(config.errorMessage, decoratorName, className, config.propertyName, decorators);
+
+    return sprintf(errorMessage, decoratorStr, className, propertyName, decorators);
   }
 
-  constructor(private config: IUsePropertyDecoratorConfig, options: IOptions) {
+  constructor(private config: IUsePropertyDecoratorConfig, options: Lint.IOptions) {
     super(options);
   }
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-    return this.applyWithWalker(
-      new DirectiveMetadataWalker(sourceFile,
-        this.getOptions(),  this.config));
+    return this.applyWithWalker(new DirectiveMetadataWalker(sourceFile, this.getOptions(), this.config));
   }
 }
 
 class DirectiveMetadataWalker extends Lint.RuleWalker {
   constructor(sourceFile: ts.SourceFile, options: Lint.IOptions, private config: IUsePropertyDecoratorConfig) {
-      super(sourceFile, options);
+    super(sourceFile, options);
   }
 
   visitClassDeclaration(node: ts.ClassDeclaration) {
-    (<ts.Decorator[]>node.decorators || [])
-      .forEach(this.validateDecorator.bind(this, node.name.text));
+    ts.createNodeArray(node.decorators).forEach(this.validateDecorator.bind(this, node.name!.text));
     super.visitClassDeclaration(node);
   }
 
   private validateDecorator(className: string, decorator: ts.Decorator) {
-    let baseExpr = <any>decorator.expression || {};
-    let expr = baseExpr.expression || {};
-    let name = expr.text;
-    let args = baseExpr.arguments || [];
-    let arg = args[0];
-    if (/^(Component|Directive)$/.test(name) && arg) {
-      this.validateProperty(className, name, arg);
+    const argument = getDecoratorArgument(decorator)!;
+    const name = getDecoratorName(decorator);
+
+    if (name && argument && /^(Component|Directive)$/.test(name)) {
+      this.validateProperty(className, name, argument);
     }
   }
 
   private validateProperty(className: string, decoratorName: string, arg: ts.ObjectLiteralExpression) {
-    if (arg.kind === SyntaxKind.current().ObjectLiteralExpression) {
-      (<ts.ObjectLiteralExpression>arg)
-        .properties
-        .filter(prop => (<any>prop.name).text === this.config.propertyName)
-        .forEach(prop => {
-          let p = <any>prop;
-          this.addFailure(
-            this.createFailure(
-              p.getStart(),
-              p.getWidth(),
-              UsePropertyDecorator.formatFailureString(this.config, decoratorName, className)));
-      });
+    if (!ts.isObjectLiteralExpression(arg)) {
+      return;
     }
+
+    arg.properties.filter(prop => prop.name!.getText() === this.config.propertyName).forEach(prop => {
+      this.addFailureAtNode(prop, UsePropertyDecorator.formatFailureString(this.config, decoratorName, className));
+    });
   }
 }

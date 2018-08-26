@@ -13,9 +13,9 @@ const dummyMetadataFactory = (declaration: DirectiveDeclaration) => {
   return {
     inputs: declaration.inputs || [],
     outputs: declaration.outputs || [],
-    hostListeners: declaration.hostListeners || {},
-    hostProperties: declaration.hostProperties || {},
-    hostAttributes: declaration.hostAttributes || {},
+    hostListeners: declaration.hostListeners || [],
+    hostProperties: declaration.hostProperties || [],
+    hostAttributes: declaration.hostAttributes || [],
     isSummary: true,
     type: {
       diDeps: [],
@@ -45,12 +45,12 @@ class Console {
   warn(message: string) {}
 }
 
-let defaultDirectives = [];
+let defaultDirectives: DirectiveDeclaration[] = [];
 
 export const parseTemplate = (template: string, directives: DirectiveDeclaration[] = []) => {
   defaultDirectives = directives.map(d => dummyMetadataFactory(d));
 
-  const TemplateParser = <any>compiler.TemplateParser;
+  const TemplateParser = compiler.TemplateParser as any;
   const expressionParser = new compiler.Parser(new compiler.Lexer());
   const elementSchemaRegistry = new compiler.DomElementSchemaRegistry();
   const ngConsole = new Console();
@@ -91,7 +91,7 @@ export const parseTemplate = (template: string, directives: DirectiveDeclaration
       );
     });
 
-  const interpolation = Config.interpolation;
+  const { interpolation } = Config;
 
   // Make sure it works with 2.2.x & 2.3.x
   const summaryKind = ((compiler as any).CompileSummaryKind || {}).Template;
@@ -113,7 +113,7 @@ export const parseTemplate = (template: string, directives: DirectiveDeclaration
         ngContentSelectors: this.ngContentSelectors,
         encapsulation: this.encapsulation,
         summaryKind: summaryKind
-      } as any;
+      };
     }
   };
 
@@ -131,7 +131,7 @@ export const parseTemplate = (template: string, directives: DirectiveDeclaration
     value: '',
     identifier: null
   };
-  let result = null;
+  let result;
   try {
     SemVerDSL.lt('4.1.0', () => {
       result = tmplParser.tryParse(
@@ -164,10 +164,11 @@ export const parseTemplate = (template: string, directives: DirectiveDeclaration
             queries: [],
             viewQueries: [],
             entryComponents: [],
+            guards: [],
             componentViewType: null,
             rendererType: null,
             componentFactory: null
-          } as any),
+          }),
           template,
           defaultDirectives,
           [],
@@ -193,10 +194,11 @@ export const parseTemplate = (template: string, directives: DirectiveDeclaration
             queries: [],
             viewQueries: [],
             entryComponents: [],
+            guards: [],
             componentViewType: null,
             rendererType: null,
             componentFactory: null
-          } as any),
+          }),
           template,
           defaultDirectives,
           [],
@@ -222,10 +224,11 @@ export const parseTemplate = (template: string, directives: DirectiveDeclaration
             queries: [],
             viewQueries: [],
             entryComponents: [],
+            guards: [],
             componentViewType: null,
             rendererType: null,
             componentFactory: null
-          } as any),
+          }),
           template,
           defaultDirectives,
           [],

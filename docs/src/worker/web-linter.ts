@@ -3,7 +3,7 @@ import * as ts from 'typescript';
 import * as Linter from 'tslint';
 import { LintResult } from 'tslint';
 
-export function getSourceFile(fileName: string, source: string): ts.SourceFile {
+export function getSourceFile(fileName: string, source: string): ts.SourceFile | undefined {
   const normalizedName = fileName;
   const compilerOptions = createCompilerOptions();
 
@@ -15,14 +15,11 @@ export function getSourceFile(fileName: string, source: string): ts.SourceFile {
     getDirectories: (_path: string) => [],
     getNewLine: () => '\n',
     getSourceFile: (filenameToGet: string) => {
-      if (filenameToGet === normalizedName) {
-        return ts.createSourceFile(filenameToGet, source, compilerOptions.target, true);
-      }
-      return undefined;
+      return filenameToGet === normalizedName ? ts.createSourceFile(filenameToGet, source, compilerOptions.target!, true) : undefined;
     },
-    readFile: () => null,
+    readFile: () => undefined,
     useCaseSensitiveFileNames: () => true,
-    writeFile: () => null,
+    writeFile: () => undefined
   };
 
   const program = ts.createProgram([normalizedName], compilerOptions, compilerHost);
@@ -32,7 +29,7 @@ export function getSourceFile(fileName: string, source: string): ts.SourceFile {
 export function createCompilerOptions(): ts.CompilerOptions {
   return {
     noResolve: true,
-    target: ts.ScriptTarget.ES5,
+    target: ts.ScriptTarget.ES5
   };
 }
 
@@ -40,7 +37,7 @@ export class WebLinter {
   private failures: Linter.RuleFailure[] = [];
 
   public lint(fileName: string, source: string, enabledRules: any): void {
-    let sourceFile: ts.SourceFile = getSourceFile(fileName, source);
+    let sourceFile = getSourceFile(fileName, source);
 
     if (sourceFile === undefined) {
       throw new Error(`Invalid source file: ${fileName}. Ensure that the files supplied to lint have a .ts or .tsx extension.`);
@@ -66,7 +63,7 @@ export class WebLinter {
       errorCount: this.failures.length,
       failures: this.failures,
       format: 'json',
-      output,
+      output
     };
   }
 
@@ -75,6 +72,6 @@ export class WebLinter {
   }
 
   private containsRule(rules: Linter.RuleFailure[], rule: Linter.RuleFailure) {
-    return rules.some((r) => r.equals(rule));
+    return rules.some(r => r.equals(rule));
   }
 }
